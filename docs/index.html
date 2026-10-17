@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>8-bit ALU Playground</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Martian+Mono:wght@400;700&display=swap">
+<style>
+html { color-scheme: light; } body { margin: 0; } [hidden] { display: none !important; }
+/* Layout: one readable column, like a short lesson. Try it first (three steps), then
+   "how the circuit did it" follows the chosen operation bit by bit, then the chapters
+   explain the project from a single gate up to the clock. Accents are Logisim's wire colours. */
+:root {
+  --bg: #f1f3ef;
+  --panel: #ffffff;
+  --ink: #1b221d;
+  --muted: #5f6a62;
+  --line: #d6dcd3;
+  --accent: #2f5fb8;      /* Logisim bus blue */
+  --on: #1f9d3a;          /* Logisim wire carrying 1 */
+  --seg: #e2401c;
+  --seg-off: #ece6df;
+  --soft: #e7ebe4;
+  --font-display: "Martian Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #151a17; --panel: #1d2420; --ink: #e5ebe6; --muted: #9aa69d; --line: #303a34;
+    --accent: #7aa3f2; --on: #3ccf5c; --seg: #ff5a33; --seg-off: #2b2522; --soft: #252d28; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #151a17; --panel: #1d2420; --ink: #e5ebe6; --muted: #9aa69d; --line: #303a34;
+  --accent: #7aa3f2; --on: #3ccf5c; --seg: #ff5a33; --seg-off: #2b2522; --soft: #252d28; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+}
+.wrap { max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+h1 { font-family: var(--font-display); font-size: clamp(1.4rem, 1.1rem + 1.2vw, 1.9rem); letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+h2 { font-size: 1.1rem; margin: 0; display: flex; align-items: center; gap: 10px; text-wrap: balance; }
+h3 { font-size: 0.98rem; margin: 0; }
+p { margin: 0; }
+.lede { color: var(--muted); }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.toc a { font-size: 0.85rem; color: var(--ink); text-decoration: none; border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 4px 11px; }
+.toc a:hover { border-color: var(--accent); }
+.part { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-top: 14px; }
+.step-no {
+  font-family: var(--font-display); font-size: 0.8rem; width: 26px; height: 26px; border-radius: 50%;
+  display: inline-grid; place-items: center; background: var(--ink); color: var(--panel); flex: none;
+}
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.nums { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.num { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.num label { font-weight: 600; }
+.num input {
+  font-family: var(--font-display); font-size: 1.6rem; padding: 10px 12px; border-radius: 8px; width: 100%;
+  border: 1.5px solid var(--line); background: var(--bg); color: var(--ink); font-variant-numeric: tabular-nums;
+}
+.binary { font-family: var(--font-display); font-size: 0.78rem; color: var(--muted); letter-spacing: 0.08em; }
+.note { font-size: 0.88rem; color: var(--muted); }
+.groups { display: flex; flex-direction: column; gap: 12px; }
+.group { display: flex; flex-direction: column; gap: 6px; }
+.group-name { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.ops { display: flex; flex-wrap: wrap; gap: 6px; }
+.op {
+  font-family: var(--font-body); font-size: 0.95rem; padding: 8px 14px; border-radius: 999px; cursor: pointer;
+  border: 1.5px solid var(--line); background: var(--bg); color: var(--ink);
+}
+.op:hover { border-color: var(--accent); }
+.op[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.result-top { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.display { background: var(--soft); border-radius: 8px; padding: 12px 14px; display: flex; gap: 8px; flex: none; }
+.digit { width: 44px; height: auto; }
+.digit .s { fill: var(--seg-off); }
+.digit .s.lit { fill: var(--seg); }
+.answer { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sum { font-family: var(--font-display); font-size: 1rem; color: var(--muted); overflow-wrap: anywhere; }
+.big { font-family: var(--font-display); font-size: 2.2rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.flags { display: flex; flex-direction: column; gap: 6px; }
+.flag { display: flex; gap: 10px; align-items: flex-start; font-size: 0.92rem; }
+.dot { width: 12px; height: 12px; border-radius: 50%; margin-top: 6px; flex: none; border: 1.5px solid var(--muted); }
+.flag.on .dot { background: var(--seg); border-color: var(--seg); }
+.flag b { font-family: var(--font-display); font-size: 0.85rem; }
+.flag:not(.on) { color: var(--muted); }
+
+/* worked example: bit columns */
+.work { display: flex; flex-direction: column; gap: 12px; }
+.work-intro { font-size: 0.95rem; }
+.bt-scroll { overflow-x: auto; }
+.bt { border-collapse: separate; border-spacing: 3px; font-family: var(--font-display); font-size: 0.85rem; }
+.bt th { font-family: var(--font-body); font-weight: 600; font-size: 0.8rem; text-align: right; padding-right: 8px; color: var(--muted); white-space: nowrap; }
+.bt td { width: 1.9em; height: 1.9em; text-align: center; border-radius: 3px; background: var(--soft); color: var(--muted); }
+.bt td.one { background: color-mix(in srgb, var(--on) 22%, transparent); color: var(--ink); font-weight: 700; }
+.bt tr.res td { outline: 1.5px solid var(--accent); }
+.bt tr.res td.one { background: var(--on); color: #fff; }
+.bt tr.carry td { background: transparent; font-size: 0.72rem; height: 1.3em; }
+.bt tr.carry td.one { background: transparent; color: var(--seg); }
+.bt tr.dim td { opacity: 0.4; }
+.bt td.gap { background: transparent; width: 0.6em; }
+.bt td.side { background: transparent; color: var(--muted); width: auto; padding-left: 8px; text-align: left; white-space: nowrap; font-size: 0.78rem; }
+.bt .hdr td { background: transparent; font-size: 0.66rem; height: 1.2em; }
+.steps { display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; padding-left: 1.2em; margin: 0; }
+.dtable { border-collapse: collapse; font-size: 0.85rem; width: 100%; }
+.dtable th, .dtable td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.dtable td { font-family: var(--font-display); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+.dtable th { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+.yes { color: var(--on); font-weight: 700; }
+
+/* chapters */
+.chapter p + p { margin-top: 0; }
+.tree { display: flex; flex-direction: column; gap: 6px; font-family: var(--font-display); font-size: 0.8rem; }
+.tree .row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.chip { border: 1px solid var(--line); border-radius: 4px; padding: 3px 8px; background: var(--bg); }
+.chip.big-chip { border-color: var(--accent); }
+.arrow { color: var(--muted); }
+.legend { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; font-size: 0.92rem; }
+.legend b { font-family: var(--font-display); }
+.blocks { font-family: var(--font-display); font-size: 0.78rem; display: flex; flex-wrap: wrap; gap: 6px; }
+.blocks span { padding: 4px 8px; border-radius: 4px; border: 1px solid var(--line); color: var(--muted); }
+.blocks span.active { border-color: var(--on); color: var(--ink); background: color-mix(in srgb, var(--on) 15%, transparent); }
+.states { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.state { text-align: center; padding: 8px 2px; border-radius: 6px; border: 1.5px solid var(--line); font-family: var(--font-display); font-size: 0.72rem; display: flex; flex-direction: column; }
+.state span { font-size: 0.62rem; opacity: 0.75; }
+.state.now { background: var(--accent); border-color: var(--accent); color: #fff; }
+.controls { display: flex; flex-wrap: wrap; gap: 6px; }
+.btn { font-family: var(--font-body); font-size: 0.9rem; padding: 8px 14px; border-radius: 6px; cursor: pointer; border: 1.5px solid var(--ink); background: transparent; color: var(--ink); }
+.btn.primary { background: var(--ink); color: var(--panel); }
+.btn[aria-pressed="true"] { background: var(--on); border-color: var(--on); color: #fff; }
+.regs { font-family: var(--font-display); font-size: 0.8rem; color: var(--muted); }
+.compare { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+.compare th, .compare td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.compare th { font-size: 0.8rem; color: var(--muted); }
+.tscroll { overflow-x: auto; }
+.dia { width: 100%; max-width: 100%; height: auto; color: var(--ink); display: block; }
+.dia .bx { fill: var(--panel); stroke: currentColor; stroke-width: 1.4; }
+.dia .bx.hl { stroke: var(--on); stroke-width: 2.5; fill: color-mix(in srgb, var(--on) 14%, var(--panel)); }
+.dia .bt1 { font-family: var(--font-display); font-size: 11.5px; fill: currentColor; font-weight: 700; }
+.dia .bt2 { font-family: var(--font-body); font-size: 11px; fill: var(--muted); }
+.dia .lb { font-family: var(--font-body); font-size: 13px; fill: currentColor; }
+.dia .lb.sm { font-size: 11px; fill: var(--muted); }
+.dia .wr { stroke: currentColor; stroke-width: 1.3; opacity: 0.75; }
+.dia .bus { stroke: var(--accent); stroke-width: 3.2; }
+.dia .go { cursor: pointer; }
+.dia .go .bx { stroke: var(--accent); stroke-width: 2; }
+.dia .go:hover .bx, .dia .go:focus .bx { fill: color-mix(in srgb, var(--accent) 14%, var(--panel)); }
+.dia .go:focus { outline: none; }
+.dia .jn { fill: currentColor; }
+.dia .pp { fill: color-mix(in srgb, var(--on) 22%, transparent); stroke: var(--on); stroke-width: 1; }
+.dia .st { fill: var(--panel); stroke: currentColor; stroke-width: 1.4; }
+.dia .st.hl { fill: var(--accent); stroke: var(--accent); }
+.dia .inv { fill: #fff; }
+.dia-scroll { overflow-x: auto; }
+.dia-scroll .dia { min-width: 520px; }
+figure { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+figcaption { font-size: 0.92rem; }
+.picker { display: flex; flex-wrap: wrap; gap: 6px; }
+.pick { font-family: var(--font-display); font-size: 0.74rem; padding: 5px 9px; border-radius: 4px; cursor: pointer; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+.pick[aria-pressed="true"] { border-color: var(--on); background: var(--on); color: #fff; }
+.key { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.8rem; color: var(--muted); align-items: center; }
+.key i { display: inline-block; width: 26px; vertical-align: middle; margin-right: 6px; }
+.key .k1 { border-top: 1.5px solid var(--ink); opacity: .75; }
+.key .kb { height: 12px; border: 2px solid var(--accent); border-radius: 3px; }
+.trail { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 0.85rem; min-height: 1.6em; }
+.trail button { font-family: var(--font-display); font-size: 0.74rem; border: none; background: none; color: var(--accent); cursor: pointer; padding: 2px 4px; text-decoration: underline; }
+.trail b { font-family: var(--font-display); font-size: 0.74rem; padding: 2px 4px; }
+.trail span { color: var(--muted); }
+.key .k8 { border-top: 3.5px solid var(--accent); }
+footer { font-size: 0.85rem; color: var(--muted); }
+code { font-family: var(--font-display); font-size: 0.85em; }
+@media (max-width: 420px) { .nums { grid-template-columns: minmax(0, 1fr); } .big { font-size: 1.8rem; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <h1>8-bit ALU Playground</h1>
+    <p class="lede">An ALU is the part of a computer's processor that does the math. This one was built from
+      nothing but logic gates in Logisim. Try it below, then look inside at the blocks it is built from.</p>
+    <nav class="toc" aria-label="Sections">
+      <a href="#try">Try it</a><a href="#inside">What is inside</a><a href="#bits">Bits</a>
+      <a href="#clock">The clock</a><a href="#story">v1 to v2</a>
+    </nav>
+  </header>
+
+  <span class="part" id="try">Try it</span>
+
+  <section class="card" aria-labelledby="s1">
+    <h2 id="s1"><span class="step-no">1</span>Enter two numbers</h2>
+    <div class="nums">
+      <div class="num"><label for="aIn">A</label><input id="aIn" type="number" min="0" max="255" value="100"><span class="binary" id="aBin"></span></div>
+      <div class="num"><label for="bIn">B</label><input id="bIn" type="number" min="0" max="255" value="45"><span class="binary" id="bBin"></span></div>
+    </div>
+    <p class="note">From 0 to 255, because the ALU works with 8 bits. The grey line under each box is the same number in binary, the way the circuit sees it.</p>
+  </section>
+
+  <section class="card" aria-labelledby="s2">
+    <h2 id="s2"><span class="step-no">2</span>Pick an operation</h2>
+    <div class="groups" id="groups"></div>
+  </section>
+
+  <section class="card" aria-labelledby="s3" aria-live="polite">
+    <h2 id="s3"><span class="step-no">3</span>See the result</h2>
+    <div class="result-top">
+      <div class="display" id="display" role="img"></div>
+      <div class="answer">
+        <span class="sum" id="sum"></span>
+        <span class="big" id="big"></span>
+      </div>
+    </div>
+    <p class="note" id="hexNote"></p>
+    <div class="flags" id="flags"></div>
+  </section>
+
+  
+
+
+  <span class="part" id="inside">What is inside</span>
+
+  <section class="card" aria-labelledby="insideTitle">
+    <h2 id="insideTitle">The blocks it is built from</h2>
+    <p class="note">Every box is its own small circuit, made from smaller ones. Pick one to see what it looks like inside, then click any blue box in the drawing to open it. Choosing an operation above opens the block that does it.</p>
+    <div class="groups" id="picker"></div>
+    <figure>
+      <div class="trail" id="trail"></div>
+      <div class="dia-scroll" id="diagram"></div>
+      <figcaption id="diaCap"></figcaption>
+    </figure>
+    <div class="key"><span><i class="k1"></i>1 wire</span><span><i class="k8"></i>8 wires (a bus)</span><span><i class="kb"></i>click to look inside</span></div>
+  </section>
+
+  <span class="part">Learn how it is built</span>
+
+  <section class="card chapter" id="bits">
+    <h2>Numbers as bits</h2>
+    <p>Inside the circuit every wire is either off (0) or on (1). Eight wires side by side hold one 8-bit number.
+      Each position is worth twice the one to its right:</p>
+    <div class="bt-scroll"><table class="bt" aria-label="Place values">
+      <tr class="hdr"><th></th><td>128</td><td>64</td><td>32</td><td>16</td><td>8</td><td>4</td><td>2</td><td>1</td></tr>
+      <tr><th>100 =</th><td>0</td><td class="one">1</td><td class="one">1</td><td>0</td><td>0</td><td class="one">1</td><td>0</td><td>0</td><td class="side">64 + 32 + 4</td></tr>
+    </table></div>
+    <p>So 8 bits can hold 0 to 255. The same bits can also be read as a <b>signed</b> number from −128 to 127:
+      if the leftmost bit is 1, the number is negative (11111111 is −1, 10000000 is −128). The circuit does not care
+      which reading you use. The flags tell you what happened under each one.</p>
+  </section>
+
+  
+
+  
+
+  
+
+  <section class="card chapter" id="clock">
+    <h2>The clock and the control unit</h2>
+    <p>In the full circuit (<code>main</code>) the ALU sits between registers, small memories that only change when a
+      clock ticks. A control unit with four states decides what each tick does. Try it with the numbers and
+      operation chosen above:</p>
+    <div class="dia-scroll" id="states"></div>
+    <div class="controls">
+      <button class="btn" id="bLoad" aria-pressed="false">Load</button>
+      <button class="btn" id="bExec" aria-pressed="false">Execute</button>
+      <button class="btn primary" id="bTick">Tick the clock</button>
+      <button class="btn" id="bReset">Reset</button>
+    </div>
+    <p class="note" id="fsmHint"></p>
+    <p class="regs" id="regs"></p>
+    <p class="note">Two flip-flops remember the state as two bits (S1 S0). In LOAD the registers for A and B are told to
+      store; in EXECUTE the output register and the flag register are told to store. This is a Moore machine: what
+      it does depends only on the state it is in.</p>
+  </section>
+
+  <section class="card chapter" id="story">
+    <h2>From the 4-bit course project to 8 bits</h2>
+    <p>This started as the final project of a Digital Logic Design course: a 4-bit ALU with 9 operations.
+      It was later rebuilt as this 8-bit version, with the bugs fixed and every block tested.</p>
+    <div class="tscroll"><table class="compare">
+      <tr><th></th><th>v1</th><th>v2</th></tr>
+      <tr><td>Width</td><td>4 bits (0–15)</td><td>8 bits (0–255)</td></tr>
+      <tr><td>Operations</td><td>9, on a 3-bit opcode</td><td>16, on a 4-bit opcode (adds MOD, MUL, shifts, rotates)</td></tr>
+      <tr><td>Flags</td><td>Z, C, S (C always showed the adder)</td><td>Z, C, S, V, correct for every operation</td></tr>
+      <tr><td>Control unit</td><td>ran on its own clock, did not drive the registers</td><td>drives the register loads on the shared clock</td></tr>
+      <tr><td>Display</td><td>1 digit, wrong segments for 6, 7, d, E</td><td>2 hex digits, all 16 values correct</td></tr>
+      <tr><td>Testing</td><td>by hand</td><td>37,000+ automatic test cases run in Logisim</td></tr>
+    </table></div>
+  </section>
+
+  <footer>Every answer on this page comes from the same model the circuit is tested against. To see the gates, open
+    <code>ALU.circ</code> in Logisim Evolution 4.0.0.</footer>
+</div>
+
+<script id="alu-model">
+// Reference model of ALUCore8, a line-for-line port of alu() in tests/gen_vectors.py.
+const OPS = [
+  ["ADD", "A + B"], ["SUB", "A − B"], ["INC", "A + 1"], ["DEC", "A − 1"],
+  ["DIV", "A ÷ B"], ["AND", "A & B"], ["OR", "A | B"], ["XOR", "A ^ B"],
+  ["NOT", "~A"], ["MOD", "A mod B"], ["MUL", "A × B"], ["SHL", "A << n"],
+  ["SHR", "A >> n"], ["SAR", "A >>> n"], ["ROL", "rotl(A, n)"], ["ROR", "rotr(A, n)"],
+];
+function add8(a, b, cin) {
+  const low = (a & 0x7F) + (b & 0x7F) + cin;
+  const c7 = low >> 7;
+  const s = a + b + cin;
+  const c8 = s >> 8;
+  return [s & 0xFF, c8, c7 ^ c8];
+}
+function alu(op, x, y) {
+  const amt = y & 7;
+  let r = 0, c = 0, v = 0;
+  if (op <= 3) {
+    const [bb, cin] = [[y, 0], [~y & 0xFF, 1], [0, 1], [0xFF, 0]][op];
+    [r, c, v] = add8(x, bb, cin);
+  } else if (op === 4 || op === 9) {
+    r = y ? (op === 4 ? Math.floor(x / y) : x % y) : (op === 4 ? 0 : x);
+    v = y === 0 ? 1 : 0;
+  } else if (op >= 5 && op <= 8) {
+    r = [x & y, x | y, x ^ y, ~x][op - 5] & 0xFF;
+  } else if (op === 10) {
+    r = (x * y) & 0xFF; c = x * y > 255 ? 1 : 0; v = c;
+  } else if (op === 11) {
+    r = (x << amt) & 0xFF; c = amt ? (x >> (8 - amt)) & 1 : 0;
+  } else if (op === 12 || op === 13) {
+    const signed = op === 13 && (x & 0x80) ? x - 256 : x;
+    r = (signed >> amt) & 0xFF; c = amt ? (x >> (amt - 1)) & 1 : 0;
+  } else {
+    r = (op === 14 ? (x << amt) | (x >> (8 - amt)) : (x >> amt) | (x << (8 - amt))) & 0xFF;
+  }
+  return { r, z: r === 0 ? 1 : 0, c, s: r >> 7, v };
+}
+</script>
+
+
+<script id="diagrams">
+// Small schematic of each block, drawn the way it is built in ALU.circ.
+// Thin lines are single wires, thick lines are 8-wire buses.
+const W = 640;
+const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+function svgWrap(id, h, label, body) {
+  return `<svg class="dia" viewBox="0 0 ${W} ${h}" role="img" aria-label="${esc(label)}">
+    <defs><marker id="ah-${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+    ${body.replace(/MARK/g, `url(#ah-${id})`)}</svg>`;
+}
+// Boxes whose title names another diagram can be clicked to open it.
+const LINKS = {
+  HalfAdder: "HalfAdder", FA: "FullAdder", Adder8bit: "Adder8bit", "7 × Adder8bit": "Adder8bit", Subtractor8bit: "Subtractor8bit",
+  INC8bit: "INC8bit", DEC8bit: "DEC8bit", LogicUnit8: "LogicUnit8", MUL8bit: "MUL8bit", DIV8bit: "DIV8bit", Step: "DivStep8",
+  ShiftLeft8: "Barrel", ShiftRight8: "Barrel", RotateLeft8: "Barrel", RotateRight8: "Barrel", "move 1": "Select1bit",
+  "move 2": "Select1bit", "move 4": "Select1bit", OpMux: "OpMux16x8", ZeroDetect8: "ZeroDetect8", Comparator8bit: "Comparator8bit",
+  Select8bit: "Select1bit", RegisterA: "Register", RegisterB: "Register", OutputRegister: "Register", FlagRegister: "Register",
+  ALUCore8: "ALUCore8", HexDecoder7: "HexDecoder7", ControlUnit: "ControlUnit", "2 × D flip-flop": "Register",
+};
+let CURRENT = "";
+function box(x, y, w, h, title, sub = "", cls = "") {
+  const cy = y + h / 2 + (sub ? -4 : 4);
+  const go = LINKS[title] !== CURRENT ? LINKS[title] : undefined;
+  const inner = `<rect class="bx ${cls}" x="${x}" y="${y}" width="${w}" height="${h}" rx="4"/>` +
+    `<text class="bt1" x="${x + w / 2}" y="${cy}" text-anchor="middle">${esc(title)}</text>` +
+    (sub ? `<text class="bt2" x="${x + w / 2}" y="${cy + 15}" text-anchor="middle">${esc(sub)}</text>` : "");
+  return go ? `<g class="go" data-go="${go}" tabindex="0" role="button" aria-label="Open ${esc(title)}">${inner}</g>` : inner;
+}
+function wire(pts, { bus = false, arrow = true } = {}) {
+  return `<polyline class="${bus ? "bus" : "wr"}" points="${pts.map((p) => p.join(",")).join(" ")}" fill="none"${arrow ? ' marker-end="MARK"' : ""}/>`;
+}
+const dot = (x, y) => `<circle class="jn" cx="${x}" cy="${y}" r="3"/>`;
+const txt = (x, y, t, anchor = "middle", cls = "lb") => `<text class="${cls}" x="${x}" y="${y}" text-anchor="${anchor}">${esc(t)}</text>`;
+
+const DIAGRAMS = {
+  HalfAdder: {
+    caption: "Adds two single bits. XOR gives the sum bit, AND gives the carry (1 only for 1 + 1). Built from 2 gates.",
+    svg: () => svgWrap("ha", 170, "Half adder: A and B go to an XOR gate for Sum and an AND gate for Carry",
+      txt(40, 54, "A", "end") + txt(40, 134, "B", "end") +
+      wire([[48, 50], [250, 50]]) + dot(150, 50) + wire([[150, 50], [150, 110], [250, 110]]) +
+      wire([[48, 130], [250, 130]]) + dot(190, 130) + wire([[190, 130], [190, 70], [250, 70]]) +
+      box(250, 35, 110, 50, "XOR") + box(250, 95, 110, 50, "AND") +
+      wire([[360, 60], [500, 60]]) + txt(510, 64, "Sum", "start") +
+      wire([[360, 120], [500, 120]]) + txt(510, 124, "Carry", "start")),
+  },
+  FullAdder: {
+    caption: "Adds two bits plus a carry coming in. Two half adders do the adding, and an OR gate combines their carries. This is one column of paper addition.",
+    svg: () => svgWrap("fa", 220, "Full adder: two half adders and an OR gate",
+      txt(40, 54, "A", "end") + txt(40, 84, "B", "end") + txt(40, 174, "Cin", "end") +
+      wire([[48, 50], [150, 50]]) + wire([[48, 80], [150, 80]]) +
+      box(150, 30, 120, 70, "HalfAdder") +
+      wire([[270, 50], [310, 50], [310, 140], [350, 140]]) + txt(290, 44, "sum") +
+      wire([[48, 170], [350, 170]]) +
+      box(350, 120, 120, 70, "HalfAdder") +
+      wire([[270, 80], [510, 80]]) + txt(390, 74, "carry") +
+      wire([[470, 170], [490, 170], [490, 100], [510, 100]]) +
+      box(510, 65, 60, 50, "OR") +
+      wire([[470, 140], [600, 140]]) + txt(606, 144, "Sum", "start") +
+      wire([[570, 90], [600, 90]]) + txt(606, 94, "Cout", "start")),
+  },
+  Adder8bit: {
+    caption: "Adds two 8-bit numbers with 8 full adders in a chain. The carry ripples from the right column (bit 0) to the left, just like on paper. V (overflow) is the XOR of the last two carries.",
+    svg: () => {
+      let b = "";
+      for (let k = 0; k < 8; k++) {
+        const i = 7 - k, x = 36 + k * 74;
+        b += txt(x + 16, 22, `A${i}`, "middle", "lb sm") + txt(x + 40, 22, `B${i}`, "middle", "lb sm");
+        b += wire([[x + 16, 28], [x + 16, 70]]) + wire([[x + 40, 28], [x + 40, 70]]);
+        b += box(x, 70, 56, 56, "FA", `bit ${i}`);
+        b += wire([[x + 28, 126], [x + 28, 160]]) + txt(x + 28, 178, `S${i}`, "middle", "lb sm");
+        if (k > 0) b += wire([[x, 98], [x - 18, 98]]);
+      }
+      b += wire([[636, 98], [610, 98]]) + txt(624, 90, "Cin");
+      b += wire([[36, 98], [6, 98]]) + txt(18, 90, "Cout");
+      return svgWrap("a8", 190, "Eight full adders in a row, carry flowing from bit 0 on the right to bit 7 on the left", b);
+    },
+  },
+  Subtractor8bit: {
+    caption: "Subtraction reuses the adder: flip every bit of B with 8 NOT gates and add 1 through the carry input. A − B = A + (flipped B) + 1, called two's complement.",
+    svg: () => adderVariant("sub", [box(170, 80, 110, 40, "8 × NOT"), wire([[30, 100], [170, 100]], { bus: true }), txt(30, 92, "B", "start")].join(""), "Cin = 1"),
+  },
+  INC8bit: {
+    caption: "Add 1 is the same adder with B fixed to 0 and the carry input fixed to 1.",
+    svg: () => adderVariant("inc", box(200, 80, 80, 40, "B = 0"), "Cin = 1"),
+  },
+  DEC8bit: {
+    caption: "Subtract 1 is the same adder with B fixed to 11111111 (that is −1) and carry 0, so A + (−1) = A − 1.",
+    svg: () => adderVariant("dec", box(190, 80, 90, 40, "B = 0xFF"), "Cin = 0"),
+  },
+  LogicUnit8: {
+    caption: "AND, OR, XOR and NOT have no carries, so each bit gets its own gate: 8 gates of each kind side by side, all working at once.",
+    svg: () => {
+      let b = txt(24, 44, "A", "start") + txt(24, 74, "B", "start");
+      b += wire([[40, 40], [580, 40]], { bus: true, arrow: false }) + wire([[40, 70], [440, 70]], { bus: true, arrow: false });
+      const names = [["8 × AND", "And"], ["8 × OR", "Or"], ["8 × XOR", "Xor"], ["8 × NOT", "NotA"]];
+      names.forEach(([t, out], k) => {
+        const x = 80 + k * 135;
+        b += dot(x + 30, 40) + wire([[x + 30, 40], [x + 30, 110]], { bus: true });
+        if (k < 3) b += dot(x + 80, 70) + wire([[x + 80, 70], [x + 80, 110]], { bus: true });
+        b += box(x, 110, 110, 50, t) + wire([[x + 55, 160], [x + 55, 195]], { bus: true }) + txt(x + 55, 214, out);
+      });
+      return svgWrap("lu", 225, "Logic unit: A and B buses feed four rows of 8 gates", b);
+    },
+  },
+  MUL8bit: {
+    caption: "Long multiplication in binary. Each bit of B picks A or 0 (8 AND gates per row), every row is shifted one place left, and a chain of 8-bit adders sums the 8 rows into a 16-bit product. R is the low 8 bits.",
+    svg: () => {
+      let b = "";
+      for (let j = 0; j < 8; j++) {
+        const y = 22 + j * 24, x = 250 - j * 18;
+        b += `<rect class="pp" x="${x}" y="${y}" width="144" height="16" rx="2"/>`;
+        b += txt(x - 8, y + 12, `A AND b${j}`, "end", "lb sm");
+      }
+      b += wire([[400, 110], [440, 110]], { bus: true });
+      b += box(440, 70, 120, 80, "7 × Adder8bit", "add the rows");
+      b += wire([[560, 95], [610, 95]], { bus: true }) + txt(616, 99, "Lo", "start");
+      b += wire([[560, 125], [610, 125]], { bus: true }) + txt(616, 129, "Hi", "start");
+      return svgWrap("mul", 220, "Multiplier: 8 shifted partial products summed by adders", b);
+    },
+  },
+  DIV8bit: {
+    caption: "Long division in binary with 8 DivStep8 blocks in a chain. Each step brings down one bit of A, checks whether B fits (Comparator8bit), subtracts it if so (Subtractor8bit) and writes one quotient bit. What is left at the end is the remainder.",
+    svg: () => {
+      let b = txt(8, 62, "B", "start") + wire([[20, 58], [592, 58]], { bus: true, arrow: false });
+      for (let k = 0; k < 8; k++) {
+        const x = 30 + k * 72;
+        b += txt(x + 16, 22, `A${7 - k}`, "middle", "lb sm") + wire([[x + 16, 28], [x + 16, 84]]);
+        b += dot(x + 44, 58) + wire([[x + 44, 58], [x + 44, 84]], { bus: true });
+        b += box(x, 84, 58, 50, "Step", String(k + 1));
+        b += wire([[x + 29, 134], [x + 29, 160]]) + txt(x + 29, 178, `q${7 - k}`, "middle", "lb sm");
+        if (k > 0) b += wire([[x - 14, 109], [x, 109]], { bus: true });
+      }
+      b += wire([[588, 109], [624, 109]], { bus: true }) + txt(606, 128, "R");
+      return svgWrap("div", 190, "Divider: 8 division steps in a chain, each producing one quotient bit", b);
+    },
+  },
+  Barrel: {
+    caption: "Shifts and rotates use a barrel shifter: three stages that move the bits by 1, 2 or 4 places, or pass them through. The last 3 bits of B switch each stage on or off, so any amount 0 to 7 takes the same time. Each stage is 8 Select1bit switches.",
+    svg: () => {
+      let b = txt(24, 94, "A", "start") + wire([[40, 90], [130, 90]], { bus: true });
+      [[1, 0], [2, 1], [4, 2]].forEach(([k, bit], i) => {
+        const x = 130 + i * 160;
+        b += box(x, 60, 110, 60, `move ${k}`, "or pass");
+        b += wire([[x + 55, 160], [x + 55, 120]]) + txt(x + 55, 178, `B bit ${bit}`, "middle", "lb sm");
+        b += wire([[x + 110, 90], [x + 160, 90]], { bus: true });
+      });
+      b += txt(600, 94, "Y", "start");
+      return svgWrap("bar", 190, "Barrel shifter: three stages moving by 1, 2 and 4", b);
+    },
+  },
+  OpMux16x8: {
+    caption: "The selector that picks the answer. A decoder turns the 4-bit opcode into 16 lines with exactly one on; AND gates let only that input through and an OR gate collects it.",
+    svg: () => {
+      let b = "";
+      const ys = [45, 70, 95, 160];
+      ["In0", "In1", "In2", "In15"].forEach((t, i) => { b += txt(195, ys[i] + 4, t, "end") + wire([[205, ys[i]], [250, ys[i]]], { bus: true }); });
+      b += txt(225, 132, "⋮");
+      b += box(250, 30, 170, 150, "AND–OR gates", "pass one input");
+      b += box(250, 205, 170, 40, "decoder 4 → 16");
+      b += txt(150, 229, "Op", "end") + wire([[160, 225], [250, 225]]);
+      b += wire([[335, 205], [335, 180]]) + txt(345, 197, "one line on", "start", "lb sm");
+      b += wire([[420, 105], [560, 105]], { bus: true }) + txt(570, 109, "Out", "start");
+      return svgWrap("mux", 260, "16-way selector: decoder plus AND-OR gates", b);
+    },
+  },
+  ALUCore8: {
+    caption: "The whole ALU. A and B go into every block at once, and the opcode tells the selector which answer becomes R. A second selector picks C and V the same way. Z comes from ZeroDetect8 and S is simply bit 7 of R.",
+    svg: (active) => {
+      const blocks = ["Adder8bit", "Subtractor8bit", "INC8bit", "DEC8bit", "LogicUnit8", "DIV8bit", "MUL8bit",
+        "ShiftLeft8", "ShiftRight8", "RotateLeft8", "RotateRight8"];
+      let b = txt(20, 24, "A, B", "start") + wire([[40, 30], [120, 30], [120, 338]], { bus: true, arrow: false });
+      blocks.forEach((n, k) => {
+        const y = 20 + k * 30;
+        b += dot(120, y + 11) + wire([[120, y + 11], [150, y + 11]], { bus: true });
+        b += box(150, y, 150, 22, n, "", n === active ? "hl" : "");
+        b += wire([[300, y + 11], [370, y + 11]], { bus: true });
+      });
+      b += box(370, 14, 100, 330, "OpMux", "16 → 1");
+      b += txt(420, 372, "Op") + wire([[420, 360], [420, 344]]);
+      b += wire([[470, 120], [620, 120]], { bus: true }) + txt(610, 112, "R");
+      b += dot(530, 120) + wire([[530, 120], [530, 170]], { bus: true });
+      b += box(480, 170, 110, 30, "ZeroDetect8") + wire([[590, 185], [620, 185]]) + txt(610, 177, "Z");
+      b += txt(535, 236, "S = bit 7 of R") + txt(535, 266, "C, V: OpMux16x2");
+      return svgWrap("core", 380, "ALUCore8: every operation block feeds a 16-way selector", b);
+    },
+  },
+  main: {
+    caption: "The full circuit you open in Logisim. Registers hold A, B, the result and the flags; they only change on a clock tick, when the ControlUnit says so. HexDecoder7 turns the result into the two red digits.",
+    svg: () => {
+      let b = txt(10, 54, "A", "start") + txt(10, 114, "B", "start");
+      b += wire([[24, 50], [60, 50]], { bus: true }) + wire([[24, 110], [60, 110]], { bus: true });
+      b += box(60, 30, 110, 40, "RegisterA") + box(60, 90, 110, 40, "RegisterB");
+      b += wire([[170, 50], [210, 50]], { bus: true }) + wire([[170, 110], [210, 110]], { bus: true });
+      b += box(210, 30, 110, 100, "ALUCore8") + txt(265, 176, "Op", "middle", "lb sm") + wire([[265, 164], [265, 130]]);
+      b += wire([[320, 50], [350, 50]], { bus: true }) + wire([[320, 110], [350, 110]]) + txt(335, 103, "flags", "middle", "lb sm");
+      b += box(350, 30, 140, 40, "OutputRegister") + box(350, 90, 140, 40, "FlagRegister");
+      b += wire([[490, 50], [520, 50]], { bus: true }) + wire([[490, 110], [520, 110]]);
+      b += box(520, 30, 112, 40, "HexDecoder7", "→ 2 digits") + box(520, 90, 112, 40, "Z C S V", "LEDs");
+      b += box(210, 210, 110, 50, "ControlUnit", "FSM");
+      b += txt(150, 230, "Load, Execute,", "end", "lb sm") + txt(150, 246, "Reset, CLK", "end", "lb sm") + wire([[156, 235], [210, 235]]);
+      b += wire([[235, 210], [235, 180], [115, 180], [115, 130]]) + txt(175, 174, "LoadAB", "middle", "lb sm");
+      b += wire([[295, 210], [295, 180], [420, 180], [420, 130]]) + txt(357, 174, "LoadOut", "middle", "lb sm");
+      return svgWrap("main", 275, "main: registers around ALUCore8, controlled by the ControlUnit", b);
+    },
+  },
+};
+
+Object.assign(DIAGRAMS, {
+  Select1bit: {
+    caption: "A switch for one wire: when Sel is 0 the output is X, when Sel is 1 it is Y. One NOT, two ANDs and an OR. The shifters and the divider are built from many of these.",
+    svg: () => svgWrap("sel", 200, "Select1bit: Sel chooses X or Y",
+      txt(40, 54, "X", "end") + txt(40, 154, "Y", "end") + txt(40, 104, "Sel", "end") +
+      wire([[48, 50], [270, 50]]) + wire([[48, 150], [270, 150]]) +
+      wire([[48, 100], [110, 100]], { arrow: false }) + dot(110, 100) +
+      wire([[110, 100], [110, 70], [150, 70]]) + box(150, 55, 60, 30, "NOT") + wire([[210, 70], [270, 70]]) +
+      wire([[110, 100], [110, 170], [270, 170]]) +
+      box(270, 35, 80, 50, "AND") + box(270, 135, 80, 50, "AND") +
+      wire([[350, 60], [400, 60], [400, 90], [430, 90]]) + wire([[350, 160], [400, 160], [400, 110], [430, 110]]) +
+      box(430, 75, 70, 50, "OR") + wire([[500, 100], [580, 100]]) + txt(590, 104, "SelOut", "start")),
+  },
+  Register: {
+    caption: "A register is memory. Each bit is a D flip-flop that copies its input only at the moment the clock ticks. The two ANDs and the OR in front of it pick the new value D when Load is 1, or feed back its own Q to keep it when Load is 0. Register4bit has 4 of these cells, Register8bit has 8 (two Register4bits). In main, RegisterA and RegisterB hold the two numbers, OutputRegister holds the result, and FlagRegister holds Z, C, S, V.",
+    svg: () => svgWrap("reg", 230, "One register bit: a D flip-flop with a load selector in front",
+      txt(40, 54, "D", "end") + txt(40, 104, "Load", "end") +
+      wire([[48, 50], [200, 50]]) + wire([[48, 100], [120, 100]], { arrow: false }) + dot(120, 100) +
+      wire([[120, 100], [120, 70], [200, 70]]) + wire([[120, 100], [120, 150], [150, 150]]) +
+      box(150, 135, 50, 30, "NOT") + wire([[200, 150], [220, 150]]) +
+      box(200, 35, 70, 50, "AND") + box(220, 135, 70, 50, "AND") +
+      wire([[270, 60], [320, 60], [320, 90], [340, 90]]) + wire([[290, 160], [320, 160], [320, 110], [340, 110]]) +
+      box(340, 75, 60, 50, "OR") + wire([[400, 100], [440, 100]]) +
+      box(440, 70, 90, 70, "D flip-flop") + txt(485, 172, "CLK", "middle", "lb sm") + wire([[485, 160], [485, 140]]) +
+      wire([[530, 100], [600, 100]]) + txt(610, 104, "Q", "start") +
+      dot(565, 100) + wire([[565, 100], [565, 210], [190, 210], [190, 175], [220, 175]]) + txt(380, 204, "Q fed back: keep the old value", "middle", "lb sm")),
+  },
+  Comparator8bit: {
+    caption: "Compares two bytes. Each 4-bit comparator uses XNOR gates to find equal bits and AND gates to find the first bit where A is 1 and B is 0. The low half's answer is passed into the high half (GTin, EQin), so the high half decides first and the low half breaks ties. The divider uses GTE (A ≥ B).",
+    svg: () => svgWrap("cmp", 200, "Comparator8bit: two 4-bit comparators chained",
+      txt(30, 44, "A, B bits 0–3", "start", "lb sm") + wire([[60, 52], [60, 80]], { bus: true }) +
+      box(20, 80, 150, 60, "Comparator4bitGTEQ", "low half") +
+      wire([[170, 100], [290, 100]]) + txt(230, 92, "GT") + wire([[170, 125], [290, 125]]) + txt(230, 140, "EQ") +
+      txt(330, 44, "A, B bits 4–7", "start", "lb sm") + wire([[360, 52], [360, 80]], { bus: true }) +
+      box(290, 80, 150, 60, "Comparator4bitGTEQ", "high half") +
+      wire([[440, 95], [600, 95]]) + txt(610, 99, "GT", "start") + wire([[440, 125], [600, 125]]) + txt(610, 129, "EQ", "start") +
+      dot(500, 95) + dot(530, 125) + wire([[500, 95], [500, 170]]) + wire([[530, 125], [530, 170]]) +
+      box(480, 170, 70, 26, "OR") + wire([[550, 183], [600, 183]]) + txt(610, 187, "GTE", "start")),
+  },
+  ZeroDetect8: {
+    caption: "Checks whether all 8 bits are 0. One NOR gate with 8 inputs: its output is 1 only when every input is 0. This makes the Z flag.",
+    svg: () => {
+      let b = "";
+      for (let i = 0; i < 8; i++) b += txt(170, 34 + i * 18, `bit ${7 - i}`, "end", "lb sm") + wire([[178, 30 + i * 18], [260, 30 + i * 18]]);
+      b += box(260, 20, 110, 150, "NOR", "8 inputs") + wire([[370, 95], [480, 95]]) + txt(490, 99, "Z", "start");
+      return svgWrap("zd", 185, "ZeroDetect8: one 8-input NOR gate", b);
+    },
+  },
+  DivStep8: {
+    caption: "One row of long division. It checks if B fits into the current remainder R (Comparator8bit, and B is not 0), computes R − B (Subtractor8bit), and a Select8bit keeps either R or R − B. The yes/no answer becomes the next quotient bit.",
+    svg: () => svgWrap("ds", 230, "DivStep8: compare, subtract, select",
+      txt(20, 44, "R, B", "start") + wire([[60, 50], [110, 50], [110, 190]], { bus: true, arrow: false }) +
+      dot(110, 50) + wire([[110, 50], [150, 50]], { bus: true }) + box(150, 30, 140, 40, "Comparator8bit", "R ≥ B?") +
+      dot(110, 120) + wire([[110, 120], [150, 120]], { bus: true }) + box(150, 100, 140, 40, "Subtractor8bit", "R − B") +
+      dot(110, 190) + wire([[110, 190], [380, 190]], { bus: true }) + txt(240, 184, "R unchanged", "middle", "lb sm") +
+      wire([[290, 50], [330, 50]]) + box(330, 30, 90, 40, "AND", "and B ≠ 0") +
+      wire([[290, 120], [380, 120]], { bus: true }) +
+      wire([[420, 50], [450, 50], [450, 100]]) + box(380, 100, 120, 100, "Select8bit") +
+      dot(450, 50) + wire([[450, 50], [600, 50]]) + txt(610, 54, "q", "start") +
+      wire([[500, 150], [600, 150]], { bus: true }) + txt(610, 154, "N", "start")),
+  },
+  HexDecoder7: {
+    caption: "Turns 4 bits (0 to 15) into the 7 segments a to g of one digit. A decoder makes 16 lines with exactly one on, and each segment is an OR of the digits that light it. Two of these drive the two red digits.",
+    svg: () => svgWrap("hex", 200, "HexDecoder7: decoder then one OR per segment",
+      txt(30, 104, "4 bits", "start") + wire([[80, 100], [130, 100]], { bus: true }) +
+      box(130, 40, 130, 120, "decoder", "4 → 16") + wire([[260, 100], [320, 100]]) + txt(290, 92, "16", "middle", "lb sm") +
+      box(320, 40, 130, 120, "7 × OR", "one per segment") +
+      "abcdefg".split("").map((s, i) => wire([[450, 52 + i * 16], [500, 52 + i * 16]]) + txt(508, 56 + i * 16, s, "start", "lb sm")).join("") +
+      `<g transform="translate(540,50) scale(0.9)">${["10,4 50,4 44,10 16,10", "52,6 52,48 46,44 46,12", "52,52 52,94 46,88 46,56", "10,96 50,96 44,90 16,90", "8,52 14,56 14,88 8,94", "8,6 14,12 14,44 8,48", "12,50 18,45 42,45 48,50 42,55 18,55"].map((p) => `<polygon class="pp" points="${p}"/>`).join("")}</g>`),
+  },
+  ControlUnit: {
+    caption: "The brain that runs the steps. Two D flip-flops remember the state (S1 S0). A few gates work out the next state from the current one and the Load and Execute buttons. LoadAB is on in the Load state and LoadOut in the Execute state; they tell the registers when to store.",
+    svg: () => svgWrap("cu", 200, "ControlUnit: next-state gates, two flip-flops, output gates",
+      txt(20, 54, "Load", "start", "lb sm") + txt(20, 84, "Execute", "start", "lb sm") + txt(20, 114, "Reset", "start", "lb sm") +
+      wire([[80, 50], [130, 50]]) + wire([[80, 80], [130, 80]]) + wire([[80, 110], [130, 110]]) +
+      box(130, 30, 130, 100, "next-state", "AND, OR, XOR") + wire([[260, 80], [310, 80]]) +
+      box(310, 40, 110, 80, "2 × D flip-flop", "state S1 S0") + txt(365, 150, "CLK", "middle", "lb sm") + wire([[365, 140], [365, 120]]) +
+      wire([[420, 80], [460, 80]]) + dot(440, 80) + wire([[440, 80], [440, 175], [195, 175], [195, 130]]) + txt(320, 169, "current state fed back", "middle", "lb sm") +
+      box(460, 50, 80, 60, "2 × AND") + wire([[540, 65], [590, 65]]) + txt(596, 69, "LoadAB", "start", "lb sm") +
+      wire([[540, 95], [590, 95]]) + txt(596, 99, "LoadOut", "start", "lb sm")),
+  },
+});
+DIAGRAMS.main.caption = "The full circuit you open in Logisim. RegisterA and RegisterB remember the two numbers you typed, so the switches can change while the ALU works. ALUCore8 computes from them. OutputRegister keeps the result on the display and FlagRegister keeps the four lights. Registers only change on a clock tick, when the ControlUnit says so (LoadAB, LoadOut).";
+
+function adderVariant(id, bSide, cin) {
+  return svgWrap(id, 170, "Adder variant", txt(30, 42, "A", "start") +
+    wire([[30, 50], [330, 50]], { bus: true }) + bSide + wire([[280, 100], [330, 100]], { bus: true }) +
+    box(330, 30, 150, 90, "Adder8bit") + wire([[405, 155], [405, 120]]) + txt(415, 152, cin, "start", "lb sm") +
+    wire([[480, 60], [600, 60]], { bus: true }) + txt(606, 64, "S", "start") +
+    wire([[480, 95], [600, 95]]) + txt(606, 99, "C, V", "start"));
+}
+
+function fsmSvg(now) {
+  const names = ["Idle", "Load", "Execute", "Display"], codes = ["00", "01", "10", "11"];
+  let b = "";
+  names.forEach((n, i) => {
+    const cx = 80 + i * 160;
+    b += `<circle class="st${i === now ? " hl" : ""}" cx="${cx}" cy="60" r="44"/>`;
+    b += `<text class="bt1${i === now ? " inv" : ""}" x="${cx}" y="58" text-anchor="middle">${n}</text>`;
+    b += `<text class="bt2${i === now ? " inv" : ""}" x="${cx}" y="76" text-anchor="middle">${codes[i]}</text>`;
+  });
+  [["Load", 0], ["tick", 1], ["Execute", 2]].forEach(([t, i]) => {
+    const x1 = 80 + i * 160 + 44, x2 = 80 + (i + 1) * 160 - 44;
+    b += wire([[x1, 60], [x2, 60]]) + txt((x1 + x2) / 2, 50, t, "middle", "lb sm");
+  });
+  b += `<path class="wr" d="M 560 104 C 560 150, 80 150, 80 104" fill="none" marker-end="MARK"/>` + txt(320, 156, "tick", "middle", "lb sm");
+  return svgWrap("fsm", 170, `Control unit states, now in ${names[now]}`, b);
+}
+</script>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const spaced = (v) => v.toString(2).padStart(8, "0").replace(/(....)/, "$1 ");
+const hex2 = (v) => v.toString(16).toUpperCase().padStart(2, "0");
+const sgn = (v) => (v & 0x80 ? v - 256 : v);
+const HEX_SEGMENTS = ["1111110", "0110000", "1101101", "1111001", "0110011", "1011011", "1011111", "1110000",
+  "1111111", "1111011", "1110111", "0011111", "1001110", "0111101", "1001111", "1000111"];
+const GROUPS = [
+  ["Math", [[0, "Add"], [1, "Subtract"], [10, "Multiply"], [4, "Divide"], [9, "Remainder"], [2, "Add 1"], [3, "Subtract 1"]]],
+  ["Logic (bit by bit)", [[5, "AND"], [6, "OR"], [7, "XOR"], [8, "NOT"]]],
+  ["Move the bits", [[11, "Shift left"], [12, "Shift right"], [13, "Shift right, keep sign"], [14, "Rotate left"], [15, "Rotate right"]]],
+];
+const BLOCK = ["Adder8bit", "Subtractor8bit", "INC8bit", "DEC8bit", "DIV8bit", "LogicUnit8", "LogicUnit8", "LogicUnit8",
+  "LogicUnit8", "DIV8bit", "MUL8bit", "ShiftLeft8", "ShiftRight8", "ShiftRight8", "RotateLeft8", "RotateRight8"];
+const state = { a: 100, b: 45, op: 0 };
+let lastOp = -1;
+
+function segSvg() {
+  const P = {
+    a: "10,4 50,4 44,10 16,10", b: "52,6 52,48 46,44 46,12", c: "52,52 52,94 46,88 46,56",
+    d: "10,96 50,96 44,90 16,90", e: "8,52 14,56 14,88 8,94", f: "8,6 14,12 14,44 8,48",
+    g: "12,50 18,45 42,45 48,50 42,55 18,55",
+  };
+  return `<svg class="digit" viewBox="0 0 60 100" aria-hidden="true">${"abcdefg".split("").map((k) =>
+    `<polygon class="s" data-seg="${k}" points="${P[k]}"/>`).join("")}</svg>`;
+}
+
+function sumText(op, x, y) {
+  const n = y & 7;
+  return ({ 0: `${x} + ${y}`, 1: `${x} − ${y}`, 2: `${x} + 1`, 3: `${x} − 1`, 4: `${x} ÷ ${y}`, 5: `${x} AND ${y}`,
+    6: `${x} OR ${y}`, 7: `${x} XOR ${y}`, 8: `NOT ${x}`, 9: `${x} mod ${y}`, 10: `${x} × ${y}`,
+    11: `${x} shifted left by ${n}`, 12: `${x} shifted right by ${n}`, 13: `${x} shifted right by ${n}, sign kept`,
+    14: `${x} rotated left by ${n}`, 15: `${x} rotated right by ${n}` })[op] + " =";
+}
+
+function flagLines(op, o) {
+  const lines = [
+    ["Z", o.z, o.z ? "Zero: the result is 0." : "Zero: off, the result is not 0."],
+    ["C", o.c, o.c ? (op === 1 ? "Carry: on, no borrow was needed (A was at least B)." : op >= 11 ? "Carry: on, the last bit pushed out was a 1." : op === 10 ? "Carry: on, the product was too big for 8 bits." : "Carry: on, the answer went past 255 and wrapped around.") : (op === 1 ? "Carry: off, a borrow was needed (A was smaller than B)." : "Carry: off.")],
+    ["S", o.s, o.s ? `Sign: on, read as a signed number the result is ${sgn(o.r)}.` : "Sign: off, the result is not negative."],
+    ["V", o.v, o.v ? ((op === 4 || op === 9) ? "Error: on, division by zero." : op === 10 ? "Overflow: on, the product was too big for 8 bits." : "Overflow: on, as signed numbers (−128 to 127) the answer doesn't fit.") : "Overflow / error: off."],
+  ];
+  return lines.map(([f, on, t]) => `<div class="flag${on ? " on" : ""}"><span class="dot"></span><span><b>${f}</b> ${t}</span></div>`).join("");
+}
+
+function render() {
+  $("aBin").textContent = spaced(state.a);
+  $("bBin").textContent = spaced(state.b);
+  $("groups").querySelectorAll(".op").forEach((b) => b.setAttribute("aria-pressed", Number(b.dataset.op) === state.op ? "true" : "false"));
+  const o = alu(state.op, state.a, state.b);
+  const digits = $("display").querySelectorAll("svg");
+  [o.r >> 4, o.r & 15].forEach((nib, k) => digits[k].querySelectorAll(".s").forEach((s) =>
+    s.classList.toggle("lit", HEX_SEGMENTS[nib]["abcdefg".indexOf(s.dataset.seg)] === "1")));
+  $("display").setAttribute("aria-label", `The circuit's display shows ${hex2(o.r)} (hexadecimal)`);
+  $("sum").textContent = sumText(state.op, state.a, state.b);
+  $("big").textContent = o.r;
+  $("hexNote").textContent = `The red display is the one in the circuit. It shows the result in hexadecimal (base 16): ${hex2(o.r)}. In binary it is ${spaced(o.r)}.`;
+  $("flags").innerHTML = flagLines(state.op, o);
+  if (state.op !== lastOp) { lastOp = state.op; showBlock(OP_DIAGRAM[state.op]); }
+  renderFsm();
+}
+
+function readNum(id, key) {
+  const v = parseInt($(id).value, 10);
+  if (!Number.isNaN(v)) state[key] = Math.max(0, Math.min(255, v));
+  render();
+}
+$("aIn").addEventListener("input", () => readNum("aIn", "a"));
+$("bIn").addEventListener("input", () => readNum("bIn", "b"));
+$("aIn").addEventListener("change", () => { $("aIn").value = state.a; });
+$("bIn").addEventListener("change", () => { $("bIn").value = state.b; });
+
+$("groups").innerHTML = GROUPS.map(([name, ops]) => `<div class="group"><span class="group-name">${name}</span><div class="ops">${
+  ops.map(([op, label]) => `<button class="op" data-op="${op}" aria-pressed="false">${label}</button>`).join("")}</div></div>`).join("");
+$("groups").querySelectorAll(".op").forEach((b) => b.addEventListener("click", () => { state.op = Number(b.dataset.op); render(); }));
+$("display").innerHTML = segSvg() + segSvg();
+const PICKS = [
+  ["Small parts", [["Select1bit", "Select1bit"], ["HalfAdder", "HalfAdder"], ["FullAdder", "FullAdder"], ["Register", "Register bit"]]],
+  ["8-bit blocks", [["Adder8bit", "Adder8bit"], ["Subtractor8bit", "Subtractor8bit"], ["INC8bit", "INC8bit"], ["DEC8bit", "DEC8bit"],
+    ["LogicUnit8", "LogicUnit8"], ["MUL8bit", "MUL8bit"], ["Comparator8bit", "Comparator8bit"], ["DivStep8", "DivStep8"],
+    ["DIV8bit", "DIV8bit"], ["Barrel", "Shift / Rotate"], ["ZeroDetect8", "ZeroDetect8"], ["OpMux16x8", "OpMux16x8"], ["HexDecoder7", "HexDecoder7"]]],
+  ["The whole thing", [["ALUCore8", "ALUCore8"], ["ControlUnit", "ControlUnit"], ["main", "main"]]],
+];
+const OP_DIAGRAM = ["Adder8bit", "Subtractor8bit", "INC8bit", "DEC8bit", "DIV8bit", "LogicUnit8", "LogicUnit8", "LogicUnit8",
+  "LogicUnit8", "DIV8bit", "MUL8bit", "Barrel", "Barrel", "Barrel", "Barrel", "Barrel"];
+const TITLES = Object.fromEntries(PICKS.flatMap(([, items]) => items));
+let trail = [];
+function showBlock(key, mode = "reset") {
+  if (mode === "reset") trail = [key];
+  else if (mode === "push") trail.push(key);
+  CURRENT = key;
+  $("picker").querySelectorAll(".pick").forEach((p) => p.setAttribute("aria-pressed", p.dataset.k === trail[0] ? "true" : "false"));
+  $("diagram").innerHTML = DIAGRAMS[key].svg(BLOCK[state.op]);
+  $("diaCap").textContent = DIAGRAMS[key].caption;
+  $("trail").innerHTML = trail.length > 1 ? trail.map((k, i) => i < trail.length - 1
+    ? `<button data-i="${i}">${TITLES[k]}</button><span>›</span>` : `<b>${TITLES[k]}</b>`).join("") : "";
+}
+function openBlock(go) { if (go) showBlock(go, "push"); }
+$("diagram").addEventListener("click", (e) => openBlock(e.target.closest("[data-go]")?.dataset.go));
+$("diagram").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.key === " ") { const g = e.target.closest("[data-go]"); if (g) { e.preventDefault(); openBlock(g.dataset.go); } }
+});
+$("trail").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-i]");
+  if (b) { trail = trail.slice(0, Number(b.dataset.i) + 1); showBlock(trail[trail.length - 1], "keep"); }
+});
+$("picker").innerHTML = PICKS.map(([g, items]) => `<div class="group"><span class="group-name">${g}</span><div class="picker">${
+  items.map(([k, t]) => `<button class="pick" data-k="${k}" aria-pressed="false">${t}</button>`).join("")}</div></div>`).join("");
+$("picker").querySelectorAll(".pick").forEach((p) => p.addEventListener("click", () => showBlock(p.dataset.k)));
+
+// Clocked system, same timing as the circuit's ControlUnit and main.
+const sys = { st: 0, qa: 0, qb: 0, out: 0, load: false, exec: false };
+function renderFsm() {
+  $("states").innerHTML = fsmSvg(sys.st);
+  $("bLoad").setAttribute("aria-pressed", sys.load); $("bExec").setAttribute("aria-pressed", sys.exec);
+  $("fsmHint").textContent = [
+    sys.load ? "Load is on. Tick to start loading." : "Waiting. Turn on Load, then tick.",
+    "Tick to store A and B in the circuit's registers.",
+    sys.exec ? "Execute is on. Tick to store the result." : "The ALU is calculating from the stored A and B. Turn on Execute, then tick.",
+    "The result is on the display. Tick to go back to Idle.",
+  ][sys.st];
+  $("regs").textContent = `Stored A = ${sys.qa} · stored B = ${sys.qb} · display = ${sys.out}`;
+}
+function tick(reset) {
+  const prev = sys.st;
+  if (!reset && prev === 1) { sys.qa = state.a; sys.qb = state.b; }
+  if (!reset && prev === 2) sys.out = alu(state.op, sys.qa, sys.qb).r;
+  sys.st = reset ? 0 : [sys.load ? 1 : 0, 2, sys.exec ? 3 : 2, 0][prev];
+  renderFsm();
+}
+$("bLoad").addEventListener("click", () => { sys.load = !sys.load; renderFsm(); });
+$("bExec").addEventListener("click", () => { sys.exec = !sys.exec; renderFsm(); });
+$("bTick").addEventListener("click", () => tick(false));
+$("bReset").addEventListener("click", () => tick(true));
+
+render();
+</script>
+</body>
+</html>

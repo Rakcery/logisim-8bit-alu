@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 230" role="img" aria-label="One register bit: a D flip-flop with a load selector in front">
+    <style>
+svg{color:#1b221d;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.bx{fill:#ffffff;stroke:currentColor;stroke-width:1.4}
+.bx.hl{stroke:#1f9d3a;stroke-width:2.5;fill:#e3f3e6}
+.bt1{font-size:11.5px;font-weight:700;fill:currentColor}
+.bt2{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:11px;fill:#5f6a62}
+.lb{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:13px;fill:currentColor}
+.lb.sm{font-size:11px;fill:#5f6a62}
+.wr{stroke:currentColor;stroke-width:1.3;opacity:.75}
+.bus{stroke:#2f5fb8;stroke-width:3.2}
+.jn{fill:currentColor}
+.pp{fill:rgba(31,157,58,.22);stroke:#1f9d3a;stroke-width:1}
+.st{fill:#fff;stroke:currentColor;stroke-width:1.4}
+.go .bx{stroke:currentColor;stroke-width:1.4}
+@media (prefers-color-scheme:dark){svg{color:#e5ebe6}.bx,.st{fill:#161b22}.bx.hl{fill:#1d3324;stroke:#3ccf5c}.bt2,.lb.sm{fill:#9aa69d}.bus{stroke:#7aa3f2}.pp{stroke:#3ccf5c}}
+</style><defs><marker id="ah-reg" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+    <text class="lb" x="40" y="54" text-anchor="end">D</text><text class="lb" x="40" y="104" text-anchor="end">Load</text><polyline class="wr" points="48,50 200,50" fill="none" marker-end="url(#ah-reg)"/><polyline class="wr" points="48,100 120,100" fill="none"/><circle class="jn" cx="120" cy="100" r="3"/><polyline class="wr" points="120,100 120,70 200,70" fill="none" marker-end="url(#ah-reg)"/><polyline class="wr" points="120,100 120,150 150,150" fill="none" marker-end="url(#ah-reg)"/><rect class="bx " x="150" y="135" width="50" height="30" rx="4"/><text class="bt1" x="175" y="154" text-anchor="middle">NOT</text><polyline class="wr" points="200,150 220,150" fill="none" marker-end="url(#ah-reg)"/><rect class="bx " x="200" y="35" width="70" height="50" rx="4"/><text class="bt1" x="235" y="64" text-anchor="middle">AND</text><rect class="bx " x="220" y="135" width="70" height="50" rx="4"/><text class="bt1" x="255" y="164" text-anchor="middle">AND</text><polyline class="wr" points="270,60 320,60 320,90 340,90" fill="none" marker-end="url(#ah-reg)"/><polyline class="wr" points="290,160 320,160 320,110 340,110" fill="none" marker-end="url(#ah-reg)"/><rect class="bx " x="340" y="75" width="60" height="50" rx="4"/><text class="bt1" x="370" y="104" text-anchor="middle">OR</text><polyline class="wr" points="400,100 440,100" fill="none" marker-end="url(#ah-reg)"/><rect class="bx " x="440" y="70" width="90" height="70" rx="4"/><text class="bt1" x="485" y="109" text-anchor="middle">D flip-flop</text><text class="lb sm" x="485" y="172" text-anchor="middle">CLK</text><polyline class="wr" points="485,160 485,140" fill="none" marker-end="url(#ah-reg)"/><polyline class="wr" points="530,100 600,100" fill="none" marker-end="url(#ah-reg)"/><text class="lb" x="610" y="104" text-anchor="start">Q</text><circle class="jn" cx="565" cy="100" r="3"/><polyline class="wr" points="565,100 565,210 190,210 190,175 220,175" fill="none" marker-end="url(#ah-reg)"/><text class="lb sm" x="380" y="204" text-anchor="middle">Q fed back: keep the old value</text></svg>
