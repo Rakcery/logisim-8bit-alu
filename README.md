@@ -12,7 +12,7 @@ a two-digit hex display. No prebuilt adders, multiplexers or registers.
 ![37,000+ test cases](https://img.shields.io/badge/test%20cases-37%2C000%2B-1f9d3a)
 ![MIT License](https://img.shields.io/badge/license-MIT-lightgrey)
 
-**[Try it in your browser](https://ryuzakisnot.github.io/logisim-8bit-alu/)** · [How it is built](#how-it-is-built) · [Opcodes](#opcodes) · [Run it in Logisim](#run-it-in-logisim)
+**[Try it in your browser](https://Rakcery.github.io/logisim-8bit-alu/)** · [How it is built](#how-it-is-built) · [Opcodes](#opcodes) · [Run it in Logisim](#run-it-in-logisim)
 
 <img src="images/playground.png" alt="The browser playground: pick an operation, see the result on the hex display and the four flags" width="760">
 
@@ -32,7 +32,7 @@ a two-digit hex display. No prebuilt adders, multiplexers or registers.
 ## Try it in your browser
 
 Not everyone has Logisim installed, so [`docs/index.html`](docs/index.html) is a
-one-page guide ([live here](https://ryuzakisnot.github.io/logisim-8bit-alu/)) to the project. Enter two numbers, pick an operation, and see the
+one-page guide ([live here](https://Rakcery.github.io/logisim-8bit-alu/)) to the project. Enter two numbers, pick an operation, and see the
 result, the hex display and what each flag light means. Below that, every block
 has a small schematic: click a box to open it, all the way from `main` down to a
 single register bit. The page's math is checked against the same test vectors as
