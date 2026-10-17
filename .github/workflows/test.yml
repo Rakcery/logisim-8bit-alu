@@ -1,0 +1,23 @@
+name: Logisim tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install Xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+      - name: Download Logisim Evolution 4.0.0
+        run: echo "JAR=$(tools/get_logisim.sh)" >> "$GITHUB_ENV"
+      - name: Test vectors are up to date
+        run: python3 tests/gen_vectors.py && git diff --exit-code tests/vectors
+      - name: Run every block's test vectors in Logisim
+        run: python3 tests/run_tests.py "$JAR"
+      - name: Playground model matches the vectors
+        run: node tests/check_demo.js
