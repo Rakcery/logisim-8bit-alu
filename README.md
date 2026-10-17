@@ -11,6 +11,7 @@ a two-digit hex display. No prebuilt adders, multiplexers or registers.
 ![16 operations](https://img.shields.io/badge/operations-16-1f9d3a)
 ![37,000+ test cases](https://img.shields.io/badge/test%20cases-37%2C000%2B-1f9d3a)
 ![MIT License](https://img.shields.io/badge/license-MIT-lightgrey)
+![Tests](https://github.com/Rakcery/logisim-8bit-alu/actions/workflows/test.yml/badge.svg)
 
 **[Try it in your browser](https://Rakcery.github.io/logisim-8bit-alu/)** · [How it is built](#how-it-is-built) · [Opcodes](#opcodes) · [Run it in Logisim](#run-it-in-logisim)
 
@@ -145,7 +146,7 @@ edge cases such as 0, 255, 127/128, B = 0 and 0xFF + 1, plus random values. They
 run inside Logisim itself:
 
 ```sh
-JAR=$(tools/get_logisim.sh)          # downloads Logisim Evolution 4.0.0
+JAR=$(bash tools/get_logisim.sh)         # downloads Logisim Evolution 4.0.0
 python3 tests/run_tests.py "$JAR"
 ```
 
