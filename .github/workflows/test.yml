@@ -14,7 +14,7 @@ jobs:
       - name: Install Xvfb
         run: sudo apt-get update && sudo apt-get install -y xvfb
       - name: Download Logisim Evolution 4.0.0
-        run: echo "JAR=$(tools/get_logisim.sh)" >> "$GITHUB_ENV"
+        run: echo "JAR=$(bash tools/get_logisim.sh)" >> "$GITHUB_ENV"
       - name: Test vectors are up to date
         run: python3 tests/gen_vectors.py && git diff --exit-code tests/vectors
       - name: Run every block's test vectors in Logisim
