@@ -13,11 +13,20 @@ a two-digit hex display. No prebuilt adders, multiplexers or registers.
 ![MIT License](https://img.shields.io/badge/license-MIT-lightgrey)
 ![Tests](https://github.com/Rakcery/logisim-8bit-alu/actions/workflows/test.yml/badge.svg)
 
-**[Try it in your browser](https://Rakcery.github.io/logisim-8bit-alu/)** · [How it is built](#how-it-is-built) · [Opcodes](#opcodes) · [Run it in Logisim](#run-it-in-logisim)
+**[Try it in your browser](https://rakcery.github.io/logisim-8bit-alu/)** · [Download ALU.circ](https://github.com/Rakcery/logisim-8bit-alu/releases/latest/download/ALU.circ) · [How it is built](#how-it-is-built) · [Opcodes](#opcodes) · [Türkçe](README.tr.md)
 
 <img src="images/playground.png" alt="The browser playground: pick an operation, see the result on the hex display and the four flags" width="760">
 
 </div>
+
+## Quick start
+
+> **No install:** open the [browser playground](https://rakcery.github.io/logisim-8bit-alu/), type two numbers and pick an operation.
+>
+> **In Logisim:**
+> 1. Install [Logisim Evolution 4.0.0](https://github.com/logisim-evolution/logisim-evolution/releases/tag/v4.0.0) (pick the installer for your system).
+> 2. Download [`ALU.circ`](https://github.com/Rakcery/logisim-8bit-alu/releases/latest/download/ALU.circ) and open it. The `main` circuit opens.
+> 3. Follow the six steps in [Run it in Logisim](#run-it-in-logisim).
 
 ## What it does
 
@@ -33,7 +42,7 @@ a two-digit hex display. No prebuilt adders, multiplexers or registers.
 ## Try it in your browser
 
 Not everyone has Logisim installed, so [`docs/index.html`](docs/index.html) is a
-one-page guide ([live here](https://Rakcery.github.io/logisim-8bit-alu/)) to the project. Enter two numbers, pick an operation, and see the
+one-page guide ([live here](https://rakcery.github.io/logisim-8bit-alu/)) to the project, in English and Turkish. Enter two numbers, pick an operation, and see the
 result, the hex display and what each flag light means. Below that, every block
 has a small schematic: click a box to open it, all the way from `main` down to a
 single register bit. The page's math is checked against the same test vectors as
@@ -69,6 +78,14 @@ keeps its own.
 bit of A, checking whether B fits, subtracting if so and writing one quotient bit.
 
 <img src="images/divider.svg" alt="Eight division steps in a chain, each producing one bit of the quotient" width="760">
+
+**In Logisim.** This is what `main` and `ALUCore8` look like in the real file. Blocks are
+joined with named tunnels (the small labels) instead of long wires, so a signal like
+`qa` or `r5` goes wherever the same label appears. That keeps a circuit this big readable.
+
+<img src="images/logisim-main.png" alt="The main circuit in Logisim: input pins, ControlUnit, RegisterA, RegisterB, ALUCore8, OutputRegister, FlagRegister, two HexDecoder7 blocks, the 7-segment displays and LEDs" width="760">
+
+<img src="images/logisim-alucore8.png" alt="ALUCore8 in Logisim: the operation blocks in a column feed OpMux16x8 and OpMux16x2, with ZeroDetect8 making the Z flag" width="760">
 
 Every block, its ports and what it is built from are listed in
 [docs/blocks.md](docs/blocks.md).
