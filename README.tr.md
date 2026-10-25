@@ -4,7 +4,7 @@
 
 **Logisim Evolution**'da sadece mantık kapıları ve D flip-flop'larla yapılmış 8 bitlik
 bir Aritmetik Mantık Birimi (ALU). 16 işlem, 4 durum bayrağı, saatle çalışan bir
-kontrol birimi ve iki haneli onaltılık ekran. Hazır toplayıcı, multiplexer ya da
+kontrol birimi, onaltılık ve onluk ekran. Hazır toplayıcı, multiplexer ya da
 register kullanılmadı.
 
 ![Logisim Evolution 4.0.0](https://img.shields.io/badge/Logisim%20Evolution-4.0.0-2f5fb8)
@@ -38,7 +38,7 @@ register kullanılmadı.
 | **Kaydırma / döndürme** | SHL, SHR, SAR, ROL, ROR, 0 ile 7 basamak arası (barrel shifter) |
 | **Bayraklar** | Z sıfır, C elde, S işaret, V taşma ya da hata |
 | **Kontrol** | 4 durumlu Moore FSM: IDLE → LOAD → EXECUTE → DISPLAY |
-| **Çıkış** | 7 segment ekranda iki onaltılık hane, bayrak ve durum LED'leri |
+| **Çıkış** | 7 segment ekranlar: iki onaltılık hane ve üç onluk hane (kapılardan yapılmış ikilikten onluğa çevirici), bayrak ve durum LED'leri |
 
 ## Tarayıcıda dene
 
@@ -120,7 +120,7 @@ kalan A olur ve hata bayrağı olarak V = 1 yanar.
 3. **Load**'u 1 yap ve saati ilerlet (Ctrl+T): IDLE → LOAD.
 4. **Load**'u tekrar 0 yap ve saati ilerlet: A ve B kaydedilir, LOAD → EXECUTE.
 5. **Execute**'u 1 yap ve saati ilerlet: sonuç ve bayraklar kaydedilir, EXECUTE → DISPLAY.
-6. İki onaltılık haneyi ve Z / C / S / V LED'lerini oku. Bir tık daha IDLE'a döndürür.
+6. Sonucu onaltılık ya da onluk ekrandan, bayrakları Z / C / S / V LED'lerinden oku. Bir tık daha IDLE'a döndürür.
 
 **Reset** = 1, bir sonraki tıkta kontrol birimini IDLE'a döndürür.
 
@@ -148,7 +148,7 @@ Dersten sonra kendi başıma geliştirmeye devam ettim:
 | İşlemler | 9 | 16 (MOD, MUL, kaydırma ve döndürme eklendi) |
 | Bayraklar | Z, C, S (C her zaman toplayıcıyı gösteriyordu) | Z, C, S, V, her işlemde doğru |
 | Kontrol birimi | kendi saatiyle çalışıyordu, register'ları sürmüyordu | ortak saatle bütün register yüklemelerini sürüyor |
-| Ekran | 1 hane, 6, 7, d, E için yanlış segmentler | 2 onaltılık hane, 16 değerin hepsi doğru |
+| Ekran | 1 hane, 6, 7, d, E için yanlış segmentler | 2 onaltılık + 3 onluk hane, baştaki sıfırlar sönük |
 | Portlar | karışık pin sıraları | sabit sıra, 8 bitlik bus'lar |
 | Test | elle | Logisim'de 37.000+ otomatik test |
 

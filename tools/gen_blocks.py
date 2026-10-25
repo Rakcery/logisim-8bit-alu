@@ -331,6 +331,39 @@ def hexdecoder7():
     return b
 
 
+def add3():
+    """Double-dabble cell: Out = In + 3 when In >= 5, else In."""
+    b = Block("Add3", [("In", 4)], [("Out", 4)])
+    b.column([split("In", "x", 4)])
+    b.column([gate("OR Gate").to_many("in", ["x1", "x0"]).to("out", "x10")])
+    b.column([gate("AND Gate").to_many("in", ["x2", "x10"]).to("out", "x210")])
+    b.column([gate("OR Gate").to_many("in", ["x3", "x210"]).to("out", "ge5")])
+    b.column([sub("HalfAdder", 2).to("A", "x0").to("B", "ge5").to("Sum", "y0").to("Carry", "c1"),
+              sub("FullAdder", 3).to("A", "x1").to("B", "ge5").to("Cin", "c1").to("Sum", "y1").to("Cout", "c2"),
+              sub("HalfAdder", 2).to("A", "x2").to("B", "c2").to("Sum", "y2").to("Carry", "c3"),
+              gate("XOR Gate").to_many("in", ["x3", "c3"]).to("out", "y3")])
+    b.column([merge("Out", [f"y{k}" for k in range(4)])])
+    return b
+
+
+def bintobcd8():
+    """8-bit binary to three decimal digits with 7 Add3 cells (shift-and-add-3)."""
+    b = Block("BinToBCD8", [("In", 8)], [("Hundreds", 4), ("Tens", 4), ("Ones", 4)])
+    b.column([split("In", "i"), constant(1, 0).to("out", "zero")])
+    # Each cell takes 4 bits, most significant first; o<n>_<k> is bit k of cell n's output.
+    cells = {1: ["zero", "i7", "i6", "i5"], 2: ["o1_2", "o1_1", "o1_0", "i4"],
+             3: ["o2_2", "o2_1", "o2_0", "i3"], 4: ["o3_2", "o3_1", "o3_0", "i2"],
+             5: ["o4_2", "o4_1", "o4_0", "i1"], 6: ["zero", "o1_3", "o2_3", "o3_3"],
+             7: ["o6_2", "o6_1", "o6_0", "o4_3"]}
+    b.column([merge(f"in{n}", bits[::-1]) for n, bits in cells.items()])
+    b.column([sub("Add3", 2).to("In", f"in{n}").to("Out", f"out{n}") for n in cells])
+    b.column([split(f"out{n}", f"o{n}_", 4) for n in cells])
+    b.column([merge("Ones", ["i0", "o5_0", "o5_1", "o5_2"]),
+              merge("Tens", ["o5_3", "o7_0", "o7_1", "o7_2"]),
+              merge("Hundreds", ["o7_3", "o6_3", "zero", "zero"])])
+    return b
+
+
 def controlunit():
     """Moore FSM, state S1S0: IDLE 00 -Load-> LOAD 01 -> EXECUTE 10 -Execute-> DISPLAY 11 -> IDLE.
 
@@ -360,13 +393,13 @@ def labeled(comp, label):
 
 
 def main_circuit():
-    """Top level: registers, ALUCore8, ControlUnit, two hex digits (HexDecoder7) and flag LEDs.
+    """Top level: registers, ALUCore8, ControlUnit, two hex digits, three decimal digits and flag LEDs.
 
-    The R, Z, C, S, V, S0, S1 output pins mirror the displays so the circuit can
-    be checked by test vectors.
+    The R, Z, C, S, V, S0, S1 and Dec output pins mirror the displays so the circuit
+    can be checked by test vectors. Leading zeros of the decimal display stay dark.
     """
     b = Block("main", [("A", 8), ("B", 8), ("Op", 4), ("Load", 1), ("Execute", 1), ("Reset", 1)],
-              [("R", 8), ("Z", 1), ("C", 1), ("S", 1), ("V", 1), ("S0", 1), ("S1", 1)])
+              [("R", 8), ("Z", 1), ("C", 1), ("S", 1), ("V", 1), ("S0", 1), ("S1", 1), ("Dec", 12)])
     b.column([clock("CLK").to("end0", "clk")])
     b.column([sub("ControlUnit", 4).to("CLK", "clk").to("Reset", "Reset").to("Load", "Load")
               .to("Execute", "Execute").to("LoadAB", "lab").to("LoadOut", "lout")
@@ -381,9 +414,15 @@ def main_circuit():
     for k, (d, q) in enumerate([("z", "Z"), ("c", "C"), ("s", "S"), ("v", "V")]):
         flags.to(f"D{k}", d).to(f"Q{k}", q)
     b.column([labeled(sub("Register8bit", 3), "OutputRegister").to("Load", "lout").to("D", "r")
-              .to("CLK", "clk").to("Q", "R"), flags, split("R", "rq")])
+              .to("CLK", "clk").to("Q", "R"), flags, split("R", "rq"),
+              sub("BinToBCD8", 3).to("In", "R").to("Hundreds", "dh").to("Tens", "dt").to("Ones", "do")])
     b.column([merge("rq_lo", [f"rq{k}" for k in range(4)]),
-              merge("rq_hi", [f"rq{k}" for k in range(4, 8)])])
+              merge("rq_hi", [f"rq{k}" for k in range(4, 8)]),
+              split("dh", "dh", 4), split("dt", "dt", 4), split("do", "do", 4)])
+    b.column([merge("Dec", [f"do{k}" for k in range(4)] + [f"dt{k}" for k in range(4)]
+                    + [f"dh{k}" for k in range(4)]),
+              gate("OR Gate", 4).to_many("in", [f"dh{k}" for k in range(4)]).to("out", "hon"),
+              gate("OR Gate", 5).to_many("in", ["hon"] + [f"dt{k}" for k in range(4)]).to("out", "ton")])
     decoders, displays = [], []
     for digit, low in (("hi", 4), ("lo", 0)):
         dec = sub("HexDecoder7", 7).to("In", f"rq_{digit}")
@@ -393,7 +432,19 @@ def main_circuit():
             disp.to(f"end{k}", f"{digit}_{seg}")
         decoders.append(dec)
         displays.append(disp)
+    blanks = []
+    for digit, on in (("dh", "hon"), ("dt", "ton"), ("do", None)):
+        dec = sub("HexDecoder7", 7).to("In", digit)
+        disp = seven_seg_display()
+        for k, seg in enumerate("abcdefg"):
+            dec.to(seg, f"{digit}_{seg}" if on else f"{digit}_{seg}_on")
+            disp.to(f"end{k}", f"{digit}_{seg}_on")
+            if on:
+                blanks.append(gate("AND Gate").to_many("in", [f"{digit}_{seg}", on]).to("out", f"{digit}_{seg}_on"))
+        decoders.append(dec)
+        displays.append(disp)
     b.column(decoders)
+    b.column(blanks)
     b.column(displays + [led(f"{f}Led").to("end0", f) for f in "ZCSV"]
              + [led(f"State{k}Led").to("end0", f"S{k}") for k in range(2)])
     return b
@@ -403,7 +454,7 @@ BLOCKS = [adder8bit, subtractor8bit, lambda: incdec("INC8bit", 0x00, 1),
           lambda: incdec("DEC8bit", 0xFF, 0), register8bit, logicunit8, select8bit,
           comparator8bit, zerodetect8, lambda: opmux16(8), lambda: opmux16(2), divstep8,
           div8bit, mul8bit, shiftleft8, shiftright8, rotateleft8, rotateright8, alucore8,
-          hexdecoder7, controlunit, main_circuit]
+          hexdecoder7, add3, bintobcd8, controlunit, main_circuit]
 
 
 def main(circ, jar):

@@ -25,8 +25,10 @@ These subcircuits are built by `tools/gen_blocks.py`. Everything else in
 | RotateRight8 | A[8], Amt[3] → Y[8] | 3-stage barrel of Select1bit | 2048 (exhaustive) |
 | ALUCore8 | A[8], B[8], Op[4] → R[8], Z, C, S, V | all operation blocks above → OpMux16x8 (R) and OpMux16x2 (C, V); Z = ZeroDetect8(R), S = R7; shift amount = B[2:0] | 1202 (all 16 opcodes × edge cases + random) |
 | HexDecoder7 | In[4] → a, b, c, d, e, f, g | 4→16 decoder (NOT + AND4) + one OR per segment; hex digits 0–9, A, b, C, d, E, F | 16 (exhaustive) |
+| Add3 | In[4] → Out[4] | ge5 = In3 + In2·(In1 + In0); adds 3 (0011) when ge5 with 2× HalfAdder, 1× FullAdder and an XOR | 16 (exhaustive) |
+| BinToBCD8 | In[8] → Hundreds[4], Tens[4], Ones[4] | 7× Add3 in the shift-and-add-3 (double dabble) pattern | 256 (exhaustive) |
 | ControlUnit | CLK, Reset, Load, Execute → LoadAB, LoadOut, S0, S1 | Moore FSM, 2× D flip-flop: IDLE 00 →(Load) LOAD 01 → EXECUTE 10 →(Execute) DISPLAY 11 → IDLE; synchronous Reset; LoadAB = LOAD, LoadOut = EXECUTE | 464 (sequential) |
-| main | A[8], B[8], Op[4], Load, Execute, Reset → R[8], Z, C, S, V, S0, S1 | Clock, ControlUnit, RegisterA/B and OutputRegister (Register8bit), FlagRegister (Register4bit: Q0=Z, Q1=C, Q2=S, Q3=V), ALUCore8, 2× HexDecoder7 + 7-segment displays, flag and state LEDs; output pins mirror the displays for testing | 535 (sequential, clock ticks) |
+| main | A[8], B[8], Op[4], Load, Execute, Reset → R[8], Z, C, S, V, S0, S1, Dec[12] | Clock, ControlUnit, RegisterA/B and OutputRegister (Register8bit), FlagRegister (Register4bit: Q0=Z, Q1=C, Q2=S, Q3=V), ALUCore8, 2× HexDecoder7 for the hex digits, BinToBCD8 + 3× HexDecoder7 for the decimal digits (leading zeros switched off with AND gates), flag and state LEDs; output pins mirror the displays for testing (Dec = hundreds, tens, ones, 4 bits each) | 535 (sequential, clock ticks) |
 
 Reused from v1 without changes: HalfAdder, FullAdder, Select1bit, Register4bit.
 v1 SevenSegment was dropped from v2 (it lit the wrong segments for 6, 7, d and E); it is still in `v1/ALU.circ`.

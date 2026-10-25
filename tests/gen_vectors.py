@@ -158,10 +158,13 @@ def main():
               "1111111", "1111011", "1110111", "0011111", "1001110", "0111101", "1001111", "1000111"]
     write("HexDecoder7", ["In[4]", "a", "b", "c", "d", "e", "f", "g"],
           [[b(v, 4)] + list(hexseg[v]) for v in range(16)])
+    write("Add3", ["In[4]", "Out[4]"], [[b(v, 4), b(v + 3 if v >= 5 else v, 4)] for v in range(16)])
+    write("BinToBCD8", ["In[8]", "Hundreds[4]", "Tens[4]", "Ones[4]"],
+          [[b(v, 8), b(v // 100, 4), b(v // 10 % 10, 4), b(v % 10, 4)] for v in range(256)])
     write("ControlUnit", ["CLK", "Reset", "Load", "Execute", "LoadAB", "LoadOut", "S0", "S1"],
           controlunit_rows(), sequential=True)
     write("main", ["tick", "Reset", "Load", "Execute", "A[8]", "B[8]", "Op[4]",
-                   "R[8]", "Z", "C", "S", "V", "S0", "S1"], main_rows(), sequential=True)
+                   "R[8]", "Z", "C", "S", "V", "S0", "S1", "Dec[12]"], main_rows(), sequential=True)
 
 
 def fsm_next(state, reset, load, execute):
@@ -185,6 +188,11 @@ def controlunit_rows():
     return rows
 
 
+def dec(v):
+    """Three decimal digits side by side, 4 bits each (hundreds, tens, ones)."""
+    return (v // 100) << 8 | (v // 10 % 10) << 4 | v % 10
+
+
 def main_rows():
     """Whole system, one clock cycle per row. Registers latch on the same edge as the FSM."""
     rng = random.Random(12)
@@ -201,7 +209,7 @@ def main_rows():
             out, flags = r, (z, c, sg, v)
         state = fsm_next(state, reset, load, execute)
         rows.append(["1", str(reset), str(load), str(execute), b(x, 8), b(y, 8), b(op, 4), b(out, 8)]
-                    + [str(f) for f in flags] + [str(state & 1), str(state >> 1)])
+                    + [str(f) for f in flags] + [str(state & 1), str(state >> 1), b(dec(out), 12)])
 
     step(1, 0, 0, 0, 0, 0)
     for op in range(16):

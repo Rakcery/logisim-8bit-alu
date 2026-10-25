@@ -4,7 +4,7 @@
 
 An 8-bit Arithmetic Logic Unit built from nothing but logic gates and D flip-flops
 in **Logisim Evolution**. 16 operations, 4 status flags, a clocked control unit and
-a two-digit hex display. No prebuilt adders, multiplexers or registers.
+a hex and a decimal display. No prebuilt adders, multiplexers or registers.
 
 ![Logisim Evolution 4.0.0](https://img.shields.io/badge/Logisim%20Evolution-4.0.0-2f5fb8)
 ![8-bit](https://img.shields.io/badge/datapath-8--bit-1f9d3a)
@@ -37,7 +37,7 @@ a two-digit hex display. No prebuilt adders, multiplexers or registers.
 | **Shift / rotate** | SHL, SHR, SAR, ROL, ROR by 0 to 7 places (barrel shifter) |
 | **Flags** | Z zero, C carry, S sign, V overflow or error |
 | **Control** | 4-state Moore FSM: IDLE → LOAD → EXECUTE → DISPLAY |
-| **Output** | two hex digits on 7-segment displays, flag and state LEDs |
+| **Output** | 7-segment displays: two hex digits and three decimal digits (gate-level binary to decimal converter), flag and state LEDs |
 
 ## Try it in your browser
 
@@ -121,7 +121,7 @@ Q = 0 and remainder = A, with V = 1 as an error flag.
 3. Set **Load** to 1 and tick the clock (Ctrl+T): IDLE → LOAD.
 4. Set **Load** back to 0 and tick: A and B are stored, LOAD → EXECUTE.
 5. Set **Execute** to 1 and tick: the result and flags are stored, EXECUTE → DISPLAY.
-6. Read the two hex digits and the Z / C / S / V LEDs. One more tick returns to IDLE.
+6. Read the result on the hex or decimal display and the Z / C / S / V LEDs. One more tick returns to IDLE.
 
 **Reset** = 1 sends the control unit back to IDLE on the next tick.
 
@@ -149,7 +149,7 @@ After the course I kept developing it on my own:
 | Operations | 9 | 16 (adds MOD, MUL, shifts, rotates) |
 | Flags | Z, C, S (C always showed the adder) | Z, C, S, V, correct for every operation |
 | Control unit | own clock, did not drive the registers | drives every register load on one shared clock |
-| Display | 1 digit, wrong segments for 6, 7, d, E | 2 hex digits, all 16 values correct |
+| Display | 1 digit, wrong segments for 6, 7, d, E | 2 hex digits plus 3 decimal digits, leading zeros dark |
 | Ports | scrambled pin orders | fixed order, 8-bit buses |
 | Testing | by hand | 37,000+ automatic test cases in Logisim |
 
