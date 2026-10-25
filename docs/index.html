@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>8-bit ALU Playground</title>
-<meta name="description" content="An 8-bit ALU built from logic gates in Logisim Evolution. Try it in your browser and open every block.">
-<meta property="og:title" content="8-bit ALU Playground">
-<meta property="og:description" content="An 8-bit ALU built from logic gates in Logisim Evolution. Try it in your browser and open every block.">
-<meta property="og:image" content="https://raw.githubusercontent.com/Rakcery/logisim-8bit-alu/main/images/playground.png">
-<meta property="og:url" content="https://rakcery.github.io/logisim-8bit-alu/">
+<title>8-bit ALU and CPU Playground</title>
+<meta name="description" content="An 8-bit ALU and a mini CPU built from logic gates in Logisim Evolution. Try them in your browser and open every block.">
+<meta property="og:title" content="8-bit ALU and CPU Playground">
+<meta property="og:description" content="An 8-bit ALU and a mini CPU built from logic gates in Logisim Evolution. Try them in your browser and open every block.">
+<meta property="og:image" content="https://raw.githubusercontent.com/Rakcery/logisim-8bit-cpu/main/images/playground.png">
+<meta property="og:url" content="https://rakcery.github.io/logisim-8bit-cpu/">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -261,12 +261,12 @@ details summary { cursor: pointer; font-weight: 600; }
 <body>
 <div class="wrap">
   <header style="display:flex;flex-direction:column;gap:10px">
-    <h1 data-tr="8-bit ALU Oyun Alanı">8-bit ALU Playground</h1>
+    <h1 data-tr="8-bit ALU ve CPU Oyun Alanı">8-bit ALU and CPU Playground</h1>
     <p data-tr="ALU, bir bilgisayarın işlemcisinde hesabı yapan kısımdır. Bu ALU, Logisim&#x27;de sadece mantık kapıları kullanılarak yapıldı. Aşağıda dene, sonra hangi bloklardan oluştuğuna bak." class="lede">An ALU is the part of a computer's processor that does the math. This one was built from
       nothing but logic gates in Logisim. Try it below, then look inside at the blocks it is built from.</p>
     <div class="links">
-      <a class="main" href="https://github.com/Rakcery/logisim-8bit-alu"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span data-tr="GitHub'da gör">View on GitHub</span></a>
-      <a href="https://github.com/Rakcery/logisim-8bit-alu/releases/latest/download/ALU.circ"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M7.25 1h1.5v7.19l2.47-2.47 1.06 1.06L8 11.06 3.72 6.78l1.06-1.06 2.47 2.47zM2 12.5h1.5V14h9v-1.5H14V15.5H2z"/></svg><span data-tr="ALU.circ indir">Download ALU.circ</span></a>
+      <a class="main" href="https://github.com/Rakcery/logisim-8bit-cpu"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span data-tr="GitHub'da gör">View on GitHub</span></a>
+      <a href="https://github.com/Rakcery/logisim-8bit-cpu/releases/latest/download/ALU.circ"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M7.25 1h1.5v7.19l2.47-2.47 1.06 1.06L8 11.06 3.72 6.78l1.06-1.06 2.47 2.47zM2 12.5h1.5V14h9v-1.5H14V15.5H2z"/></svg><span data-tr="ALU.circ indir">Download ALU.circ</span></a>
       <button id="langBtn" type="button" lang="tr">Türkçe</button>
     </div>
     <nav class="toc" aria-label="Sections">
@@ -431,8 +431,8 @@ details summary { cursor: pointer; font-weight: 600; }
     </table></div>
   </section>
 
-  <footer data-tr="Bu sayfadaki her cevap, devrenin test edildiği modelin aynısından geliyor. Kapıları görmek için &lt;a href=&#x27;https://github.com/Rakcery/logisim-8bit-alu/releases/latest/download/ALU.circ&#x27;&gt;ALU.circ&lt;/a&gt; dosyasını Logisim Evolution 4.0.0&#x27;da aç. Kaynak kodu ve testler &lt;a href=&#x27;https://github.com/Rakcery/logisim-8bit-alu&#x27;&gt;GitHub&#x27;da&lt;/a&gt;.">Every answer on this page comes from the same model the circuit is tested against. To see the gates, open
-    <a href="https://github.com/Rakcery/logisim-8bit-alu/releases/latest/download/ALU.circ">ALU.circ</a> in Logisim Evolution 4.0.0. Source and tests are <a href="https://github.com/Rakcery/logisim-8bit-alu">on GitHub</a>.</footer>
+  <footer data-tr="Bu sayfadaki her cevap, devrenin test edildiği modelin aynısından geliyor. Kapıları görmek için &lt;a href=&#x27;https://github.com/Rakcery/logisim-8bit-cpu/releases/latest/download/ALU.circ&#x27;&gt;ALU.circ&lt;/a&gt; dosyasını Logisim Evolution 4.0.0&#x27;da aç. Kaynak kodu ve testler &lt;a href=&#x27;https://github.com/Rakcery/logisim-8bit-cpu&#x27;&gt;GitHub&#x27;da&lt;/a&gt;.">Every answer on this page comes from the same model the circuit is tested against. To see the gates, open
+    <a href="https://github.com/Rakcery/logisim-8bit-cpu/releases/latest/download/ALU.circ">ALU.circ</a> in Logisim Evolution 4.0.0. Source and tests are <a href="https://github.com/Rakcery/logisim-8bit-cpu">on GitHub</a>.</footer>
 </div>
 
 <script id="alu-model">

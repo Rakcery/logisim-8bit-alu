@@ -1,19 +1,20 @@
 <div align="center">
 
-# 8-bit ALU from Logic Gates
+# 8-bit ALU and Mini CPU from Logic Gates
 
 An 8-bit Arithmetic Logic Unit built from nothing but logic gates and D flip-flops
 in **Logisim Evolution**. 16 operations, 4 status flags, a clocked control unit and
-a hex and a decimal display. No prebuilt adders, multiplexers or registers.
+a hex and a decimal display. Around it, a small single-cycle CPU runs programs
+from a ROM. No prebuilt adders, multiplexers or registers.
 
 ![Logisim Evolution 4.0.0](https://img.shields.io/badge/Logisim%20Evolution-4.0.0-2f5fb8)
 ![8-bit](https://img.shields.io/badge/datapath-8--bit-1f9d3a)
 ![16 operations](https://img.shields.io/badge/operations-16-1f9d3a)
 ![37,000+ test cases](https://img.shields.io/badge/test%20cases-37%2C000%2B-1f9d3a)
 ![MIT License](https://img.shields.io/badge/license-MIT-lightgrey)
-![Tests](https://github.com/Rakcery/logisim-8bit-alu/actions/workflows/test.yml/badge.svg)
+![Tests](https://github.com/Rakcery/logisim-8bit-cpu/actions/workflows/test.yml/badge.svg)
 
-**[Try it in your browser](https://rakcery.github.io/logisim-8bit-alu/)** · [Download ALU.circ](https://github.com/Rakcery/logisim-8bit-alu/releases/latest/download/ALU.circ) · [How it is built](#how-it-is-built) · [Opcodes](#opcodes) · [Türkçe](README.tr.md)
+**[Try it in your browser](https://rakcery.github.io/logisim-8bit-cpu/)** · [Download ALU.circ](https://github.com/Rakcery/logisim-8bit-cpu/releases/latest/download/ALU.circ) · [How it is built](#how-it-is-built) · [Opcodes](#opcodes) · [Türkçe](README.tr.md)
 
 <img src="images/playground.png" alt="The browser playground: pick an operation, see the result on the hex display and the four flags" width="760">
 
@@ -21,11 +22,11 @@ a hex and a decimal display. No prebuilt adders, multiplexers or registers.
 
 ## Quick start
 
-> **No install:** open the [browser playground](https://rakcery.github.io/logisim-8bit-alu/), type two numbers and pick an operation.
+> **No install:** open the [browser playground](https://rakcery.github.io/logisim-8bit-cpu/), type two numbers and pick an operation.
 >
 > **In Logisim:**
 > 1. Install [Logisim Evolution 4.0.0](https://github.com/logisim-evolution/logisim-evolution/releases/tag/v4.0.0) (pick the installer for your system).
-> 2. Download [`ALU.circ`](https://github.com/Rakcery/logisim-8bit-alu/releases/latest/download/ALU.circ) and open it. The `main` circuit opens.
+> 2. Download [`ALU.circ`](https://github.com/Rakcery/logisim-8bit-cpu/releases/latest/download/ALU.circ) and open it. The `main` circuit opens.
 > 3. Follow the six steps in [Run it in Logisim](#run-it-in-logisim).
 
 ## What it does
@@ -43,7 +44,7 @@ a hex and a decimal display. No prebuilt adders, multiplexers or registers.
 ## Try it in your browser
 
 Not everyone has Logisim installed, so [`docs/index.html`](docs/index.html) is a
-one-page guide ([live here](https://rakcery.github.io/logisim-8bit-alu/)) to the project, in English and Turkish. Enter two numbers, pick an operation, and see the
+one-page guide ([live here](https://rakcery.github.io/logisim-8bit-cpu/)) to the project, in English and Turkish. Enter two numbers, pick an operation, and see the
 result on the hex and decimal displays and what each flag light means. A step-by-step
 player follows your numbers through the blocks, and the Mini CPU section runs the
 example programs (or your own) one tick at a time, showing every register. Below that,

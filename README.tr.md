@@ -1,20 +1,20 @@
 <div align="center">
 
-# Mantık Kapılarından 8-bit ALU
+# Mantık Kapılarından 8-bit ALU ve Mini CPU
 
 **Logisim Evolution**'da sadece mantık kapıları ve D flip-flop'larla yapılmış 8 bitlik
 bir Aritmetik Mantık Birimi (ALU). 16 işlem, 4 durum bayrağı, saatle çalışan bir
-kontrol birimi, onaltılık ve onluk ekran. Hazır toplayıcı, multiplexer ya da
-register kullanılmadı.
+kontrol birimi, onaltılık ve onluk ekran. Etrafında, ROM'daki programları çalıştıran
+küçük, tek döngülü bir CPU var. Hazır toplayıcı, multiplexer ya da register kullanılmadı.
 
 ![Logisim Evolution 4.0.0](https://img.shields.io/badge/Logisim%20Evolution-4.0.0-2f5fb8)
 ![8-bit](https://img.shields.io/badge/datapath-8--bit-1f9d3a)
 ![16 operations](https://img.shields.io/badge/operations-16-1f9d3a)
 ![37,000+ test cases](https://img.shields.io/badge/test%20cases-37%2C000%2B-1f9d3a)
 ![MIT License](https://img.shields.io/badge/license-MIT-lightgrey)
-![Tests](https://github.com/Rakcery/logisim-8bit-alu/actions/workflows/test.yml/badge.svg)
+![Tests](https://github.com/Rakcery/logisim-8bit-cpu/actions/workflows/test.yml/badge.svg)
 
-**[Tarayıcıda dene](https://rakcery.github.io/logisim-8bit-alu/?lang=tr)** · [ALU.circ indir](https://github.com/Rakcery/logisim-8bit-alu/releases/latest/download/ALU.circ) · [Nasıl yapıldı](#nasıl-yapıldı) · [Opcode'lar](#opcodelar) · [English](README.md)
+**[Tarayıcıda dene](https://rakcery.github.io/logisim-8bit-cpu/?lang=tr)** · [ALU.circ indir](https://github.com/Rakcery/logisim-8bit-cpu/releases/latest/download/ALU.circ) · [Nasıl yapıldı](#nasıl-yapıldı) · [Opcode'lar](#opcodelar) · [English](README.md)
 
 <img src="images/playground.png" alt="Tarayıcıdaki oyun alanı: bir işlem seç, sonucu onaltılık ekranda ve dört bayrakta gör" width="760">
 
@@ -22,11 +22,11 @@ register kullanılmadı.
 
 ## Hemen dene
 
-> **Kurulum yok:** [tarayıcıdaki oyun alanını](https://rakcery.github.io/logisim-8bit-alu/?lang=tr) aç, iki sayı yaz ve bir işlem seç.
+> **Kurulum yok:** [tarayıcıdaki oyun alanını](https://rakcery.github.io/logisim-8bit-cpu/?lang=tr) aç, iki sayı yaz ve bir işlem seç.
 >
 > **Logisim'de:**
 > 1. [Logisim Evolution 4.0.0](https://github.com/logisim-evolution/logisim-evolution/releases/tag/v4.0.0)'ı kur (sistemine uygun kurulum dosyasını seç).
-> 2. [`ALU.circ`](https://github.com/Rakcery/logisim-8bit-alu/releases/latest/download/ALU.circ) dosyasını indir ve aç. `main` devresi açılır.
+> 2. [`ALU.circ`](https://github.com/Rakcery/logisim-8bit-cpu/releases/latest/download/ALU.circ) dosyasını indir ve aç. `main` devresi açılır.
 > 3. [Logisim'de çalıştır](#logisimde-çalıştır) bölümündeki altı adımı izle.
 
 ## Ne yapıyor
@@ -44,7 +44,7 @@ register kullanılmadı.
 ## Tarayıcıda dene
 
 Herkesin bilgisayarında Logisim yok, bu yüzden [`docs/index.html`](docs/index.html)
-projeyi anlatan tek sayfalık bir rehber ([canlı hali](https://rakcery.github.io/logisim-8bit-alu/?lang=tr)),
+projeyi anlatan tek sayfalık bir rehber ([canlı hali](https://rakcery.github.io/logisim-8bit-cpu/?lang=tr)),
 Türkçe ve İngilizce. İki sayı gir, bir işlem seç; sonucu onaltılık ve onluk ekranda,
 her bayrak ışığının ne anlama geldiğini de yanında gör. Adım adım oynatıcı sayılarını
 bloklar arasında takip eder; Mini CPU bölümü örnek programları (ya da seninkini) tık tık
