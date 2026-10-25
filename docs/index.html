@@ -172,6 +172,40 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 .dia .st.hl { fill: var(--accent); stroke: var(--accent); }
 .dia .inv { fill: #fff; }
 .dia-scroll { overflow-x: auto; }
+.dia .w1 { stroke: var(--on); stroke-width: 2.4; }
+.dia .w0 { stroke: var(--muted); stroke-width: 1.3; opacity: 0.8; }
+.dia .flow { stroke-dasharray: 7 5; animation: flow 0.7s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -12; } }
+.dia .c0 { fill: var(--soft); stroke: var(--line); }
+.dia .c1 { fill: var(--on); stroke: var(--on); }
+.dia .cq { fill: transparent; stroke: var(--line); stroke-dasharray: 2 2; }
+.dia .cur { stroke: var(--accent); stroke-width: 2.5; }
+.dia .ct0 { font-family: var(--font-display); font-size: 12px; fill: var(--muted); }
+.dia .ct1 { font-family: var(--font-display); font-size: 12px; fill: #fff; font-weight: 700; }
+.dia .v1 { font-family: var(--font-display); font-size: 12px; fill: var(--on); font-weight: 700; }
+.dia .v0 { font-family: var(--font-display); font-size: 12px; fill: var(--muted); }
+.dia .dimg { opacity: 0.3; }
+.dia .seg1 { fill: var(--seg); }
+.dia .seg0 { fill: var(--seg-off); }
+.trace-stage { min-height: 120px; }
+.dia .lamp1 { fill: #f5b301; stroke: #c98f00; stroke-width: 1.5; }
+.dia .lamp0 { fill: var(--soft); stroke: var(--line); stroke-width: 1.5; }
+.dia .ring { fill: none; stroke: var(--line); stroke-width: 8; }
+.dia .arc { stroke-width: 5; }
+.dia .dotA { fill: var(--accent); }
+.dia .rest { fill: color-mix(in srgb, var(--accent) 18%, transparent); stroke: var(--accent); stroke-dasharray: 4 3; }
+.dia .mid { font-family: var(--font-display); font-size: 15px; font-weight: 700; fill: currentColor; }
+.dia .big { font-family: var(--font-display); font-size: 19px; font-weight: 700; fill: currentColor; }
+.dia .huge { font-family: var(--font-display); font-size: 30px; font-weight: 700; fill: currentColor; }
+.dia .segt { fill: var(--seg); }
+.trace-mode { display: flex; gap: 6px; margin-bottom: 10px; }
+.trace-stage .dia { animation: fadein 0.35s ease-out; }
+@keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.trace-text { font-size: 0.95rem; min-height: 4.6em; }
+.trace-bar { height: 4px; background: var(--soft); border-radius: 2px; overflow: hidden; }
+.trace-bar i { display: block; height: 100%; background: var(--on); transition: width 0.3s; }
+.trace-count { font-family: var(--font-display); font-size: 0.78rem; color: var(--muted); margin-left: auto; align-self: center; }
+@media (prefers-reduced-motion: reduce) { .dia .flow, .trace-stage .dia { animation: none; } .trace-bar i { transition: none; } }
 .dia-scroll .dia { min-width: 520px; }
 figure { margin: 0; display: flex; flex-direction: column; gap: 10px; }
 figcaption { font-size: 0.92rem; }
@@ -204,7 +238,7 @@ code { font-family: var(--font-display); font-size: 0.85em; }
       <button id="langBtn" type="button" lang="tr">Türkçe</button>
     </div>
     <nav class="toc" aria-label="Sections">
-      <a data-tr="Dene" href="#try">Try it</a><a data-tr="İçinde ne var" href="#inside">What is inside</a><a data-tr="Bitler" href="#bits">Bits</a>
+      <a data-tr="Dene" href="#try">Try it</a><a data-tr="Adım adım" href="#watch">Step by step</a><a data-tr="İçinde ne var" href="#inside">What is inside</a><a data-tr="Bitler" href="#bits">Bits</a>
       <a data-tr="Saat" href="#clock">The clock</a><a data-tr="v1&#x27;den v2&#x27;ye" href="#story">v1 to v2</a>
     </nav>
   </header>
@@ -240,6 +274,25 @@ code { font-family: var(--font-display); font-size: 0.85em; }
 
   
 
+
+  <section class="card" id="watch" aria-labelledby="s4">
+    <h2 data-tr="&lt;span class=&quot;step-no&quot;&gt;4&lt;/span&gt;Devrenin içinde izle" id="s4"><span class="step-no">4</span>Watch it inside the circuit</h2>
+    <p data-tr="Oynat düğmesine bas, sayıların devrenin içinde nereden geçtiğini adım adım gör. Basit hali herkes için; Detaylı hali gerçek kapıları ve bitleri gösterir (yeşil teller 1 taşır)." class="note">Press play to see where your numbers go inside the circuit, one step at a time. Simple is for everyone; Detailed shows the real gates and bits (green wires carry a 1).</p>
+    <div class="trace-mode" role="group" aria-label="Detail level">
+      <button class="btn" id="tSimple" data-tr="Basit">Simple</button>
+      <button class="btn" id="tDetail" data-tr="Detaylı">Detailed</button>
+    </div>
+    <div class="controls">
+      <button class="btn primary" id="tPlay"></button>
+      <button class="btn" id="tPrev" aria-label="Previous step">◀</button>
+      <button class="btn" id="tNext" aria-label="Next step">▶</button>
+      <button class="btn" id="tRestart"></button>
+      <span class="trace-count" id="tCount"></span>
+    </div>
+    <div class="trace-bar"><i id="tBar"></i></div>
+    <div class="dia-scroll trace-stage" id="tStage"></div>
+    <p class="trace-text" id="tText" aria-live="polite"></p>
+  </section>
 
   <span data-tr="İçinde ne var" class="part" id="inside">What is inside</span>
 
@@ -706,6 +759,519 @@ function fsmSvg(now) {
 }
 </script>
 
+<script id="trace">
+// Step-by-step walk through the circuit for the chosen operation. Every number shown
+// comes from the same bit-level rules the blocks use; traceSteps() ends on alu()'s answer.
+const bit = (v, j) => (v >> j) & 1;
+const bin = (v, n = 8) => v.toString(2).padStart(n, "0");
+const CW = 25;  // bit cell pitch
+function cellRow(x, y, v, { n = 8, show = () => true, cur = () => false, label = "", tag = "" } = {}) {
+  let s = label ? txt(x - 10, y + 16, label, "end", "lb sm") : "";
+  for (let j = n - 1; j >= 0; j--) {
+    const cx = x + (n - 1 - j) * CW, known = show(j), b = known ? bit(v, j) : 0;
+    s += `<rect class="${known ? (b ? "c1" : "c0") : "cq"}${cur(j) ? " cur" : ""}" x="${cx}" y="${y}" width="22" height="22" rx="3"/>`;
+    s += `<text class="${known && b ? "ct1" : "ct0"}" x="${cx + 11}" y="${y + 16}" text-anchor="middle">${known ? b : "·"}</text>`;
+  }
+  if (tag) s += txt(x + n * CW + 6, y + 16, tag, "start", "lb sm");
+  return s;
+}
+const cellX = (x, j, n = 8) => x + (n - 1 - j) * CW + 11;
+const vw = (pts, v, flow = false) => `<polyline class="${v ? "w1" : "w0"}${flow ? " flow" : ""}" points="${pts.map((p) => p.join(",")).join(" ")}" fill="none" marker-end="MARK"/>`;
+const vt = (x, y, v, anchor = "middle") => `<text class="${v ? "v1" : "v0"}" x="${x}" y="${y}" text-anchor="${anchor}">${v}</text>`;
+function gbox(x, y, w, h, title, active = false, sub = "") {
+  const cy = y + h / 2 + (sub ? -4 : 4);
+  return `<rect class="bx${active ? " hl" : ""}" x="${x}" y="${y}" width="${w}" height="${h}" rx="4"/>` +
+    `<text class="bt1" x="${x + w / 2}" y="${cy}" text-anchor="middle">${esc(title)}</text>` +
+    (sub ? `<text class="bt2" x="${x + w / 2}" y="${cy + 15}" text-anchor="middle">${esc(sub)}</text>` : "");
+}
+// Own wrapper: arrowheads keep one size whatever the wire thickness.
+const tsvg = (h, label, body) => `<svg class="dia" viewBox="0 0 ${W} ${h}" role="img" aria-label="${esc(label)}">
+  <defs><marker id="ah-tr" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/></marker></defs>
+  ${body.replace(/MARK/g, "url(#ah-tr)")}</svg>`;
+
+function overviewStep(op) {
+  const blocks = ["Adder8bit", "Subtractor8bit", "INC8bit", "DEC8bit", "LogicUnit8", "DIV8bit", "MUL8bit",
+    "ShiftLeft8", "ShiftRight8", "RotateLeft8", "RotateRight8"];
+  const active = BLOCK[op];
+  let b = txt(20, 24, "A, B", "start") + `<polyline class="bus" points="40,30 120,30 120,338" fill="none"/>`;
+  blocks.forEach((n, k) => {
+    const y = 20 + k * 30, on = n === active;
+    b += `<polyline class="${on ? "w1 flow" : "bus dimg"}" points="120,${y + 11} 150,${y + 11}" fill="none" marker-end="MARK"/>`;
+    b += `<g class="${on ? "" : "dimg"}">${gbox(150, y, 150, 22, n, on)}</g>`;
+    b += `<polyline class="${on ? "w1 flow" : "bus dimg"}" points="300,${y + 11} 370,${y + 11}" fill="none" marker-end="MARK"/>`;
+  });
+  b += gbox(370, 14, 100, 330, "OpMux", true, "16 → 1");
+  b += txt(420, 372, `Op = ${bin(op, 4)}`) + vw([[420, 360], [420, 346]], 1);
+  b += `<polyline class="w1 flow" points="470,120 620,120" fill="none" marker-end="MARK"/>` + txt(610, 112, "R");
+  return {
+    svg: tsvg(380, "ALUCore8 with the active block highlighted", b),
+    text: L(`A and B go into every block at the same time, so all of them calculate. The opcode Op = ${bin(op, 4)} tells OpMux to let only the ${active} answer through. Let's look inside ${active}.`,
+      `A ve B aynı anda bütün bloklara girer, yani hepsi hesap yapar. Opcode Op = ${bin(op, 4)}, OpMux'a sadece ${active} bloğunun cevabını geçirmesini söyler. Şimdi ${active}'in içine bakalım.`),
+  };
+}
+
+function adderSteps(op, a, b) {
+  const bb = [b, ~b & 0xFF, 0, 0xFF][op], cin = [0, 1, 1, 0][op];
+  const c = [cin], s = [];
+  for (let i = 0; i < 8; i++) {
+    const x = bit(a, i) ^ bit(bb, i);
+    s.push(x ^ c[i]);
+    c.push((bit(a, i) & bit(bb, i)) | (x & c[i]));
+  }
+  const sum = s.reduce((t, v, i) => t | (v << i), 0);
+  const steps = [];
+  const bName = [L("B", "B"), L("NOT B", "NOT B"), L("B = 0", "B = 0"), L("B = −1", "B = −1")][op];
+  let prep = cellRow(200, 30, a, { label: "A", tag: String(a) });
+  if (op === 1) prep += cellRow(200, 66, b, { label: "B", tag: String(b) }) + txt(200 + 8 * CW + 60, 84, L("8 NOT gates", "8 NOT kapısı"), "start", "lb sm");
+  prep += cellRow(200, op === 1 ? 102 : 66, bb, { label: L("into adder", "toplayıcıya"), tag: bName });
+  prep += txt(200, op === 1 ? 152 : 116, `Cin = ${cin}`, "start");
+  steps.push({
+    svg: tsvg(op === 1 ? 170 : 134, "Adder inputs", prep),
+    text: [
+      L("Adder8bit gets A, B and a carry-in of 0.", "Adder8bit, A'yı, B'yi ve 0 olan bir elde girişini alır."),
+      L("Subtraction uses the same adder: 8 NOT gates flip every bit of B and the carry-in is 1. A − B = A + (NOT B) + 1.", "Çıkarma da aynı toplayıcıyı kullanır: 8 NOT kapısı B'nin her bitini ters çevirir, elde girişi de 1 olur. A − B = A + (NOT B) + 1."),
+      L("Add 1 is the adder with B fixed to 0 and the carry-in fixed to 1.", "1 ekleme, B'si 0'a ve elde girişi 1'e sabitlenmiş toplayıcıdır."),
+      L("Subtract 1 is the adder with B fixed to 11111111 (that is −1) and carry-in 0.", "1 çıkarma, B'si 11111111'e (yani −1) ve elde girişi 0'a sabitlenmiş toplayıcıdır."),
+    ][op],
+  });
+  for (let i = 0; i < 8; i++) {
+    let g = "";
+    for (let k = 0; k < 8; k++) {
+      const j = 7 - k, x = 36 + k * 74, known = j <= i, now = j === i;
+      if (known) {
+        g += vt(x + 16, 22, bit(a, j)) + vt(x + 40, 22, bit(bb, j));
+        g += vw([[x + 16, 28], [x + 16, 60]], bit(a, j), now) + vw([[x + 40, 28], [x + 40, 60]], bit(bb, j), now);
+        g += vw([[x + 28, 116], [x + 28, 140]], s[j], now) + vt(x + 28, 156, s[j]);
+      } else {
+        g += txt(x + 16, 22, `A${j}`, "middle", "lb sm") + txt(x + 40, 22, `B${j}`, "middle", "lb sm");
+      }
+      g += `<g class="${known ? "" : "dimg"}">${gbox(x, 60, 56, 56, "FA", now, `bit ${j}`)}</g>`;
+      if (k > 0 && j <= i) g += vw([[x, 88], [x - 18, 88]], c[j + 1], j === i);
+    }
+    g += vw([[636, 88], [610, 88]], cin, i === 0) + vt(624, 80, cin);
+    if (i === 7) g += vw([[36, 88], [6, 88]], c[8], true) + vt(18, 80, c[8]);
+    // the gates inside the current full adder
+    const ai = bit(a, i), bi = bit(bb, i), ci = c[i], x1 = ai ^ bi, g1 = ai & bi, p = x1 & ci;
+    const Y = 180;
+    g += txt(20, Y + 10, L(`Inside FA bit ${i}:`, `FA bit ${i}'in içi:`), "start", "lb");
+    g += txt(40, Y + 44, "A", "end") + vt(52, Y + 34, ai) + vw([[48, Y + 40], [150, Y + 40]], ai, true);
+    g += txt(40, Y + 74, "B", "end") + vt(52, Y + 64, bi) + vw([[48, Y + 70], [150, Y + 70]], bi, true);
+    g += txt(40, Y + 144, "Cin", "end") + vt(52, Y + 134, ci) + vw([[48, Y + 140], [330, Y + 140]], ci, true);
+    g += gbox(150, Y + 30, 70, 50, "XOR", true) + gbox(150, Y + 90, 70, 40, "AND", g1 === 1);
+    g += `<polyline class="${ai ? "w1" : "w0"}" points="100,${Y + 40} 100,${Y + 100} 150,${Y + 100}" fill="none" marker-end="MARK"/>`;
+    g += `<polyline class="${bi ? "w1" : "w0"}" points="120,${Y + 70} 120,${Y + 120} 150,${Y + 120}" fill="none" marker-end="MARK"/>`;
+    g += vw([[220, Y + 55], [330, Y + 55]], x1, true) + vt(270, Y + 49, x1);
+    g += `<polyline class="${ci ? "w1" : "w0"}" points="310,${Y + 140} 310,${Y + 70} 330,${Y + 70}" fill="none" marker-end="MARK"/>`;
+    g += gbox(330, Y + 30, 70, 50, "XOR", true, "sum") + gbox(330, Y + 110, 70, 40, "AND", p === 1);
+    g += `<polyline class="${x1 ? "w1" : "w0"}" points="300,${Y + 55} 300,${Y + 120} 330,${Y + 120}" fill="none" marker-end="MARK"/>`;
+    g += vw([[400, Y + 55], [600, Y + 55]], s[i], true) + vt(612, Y + 59, s[i], "start") + txt(560, Y + 49, L("sum", "toplam"), "middle", "lb sm");
+    g += vw([[220, Y + 110], [250, Y + 110], [250, Y + 170], [480, Y + 170], [480, Y + 150], [490, Y + 150]], g1);
+    g += vw([[400, Y + 130], [490, Y + 130]], p);
+    g += gbox(490, Y + 115, 60, 45, "OR", c[i + 1] === 1);
+    g += vw([[550, Y + 137], [600, Y + 137]], c[i + 1], true) + vt(612, Y + 141, c[i + 1], "start") + txt(575, Y + 129, L("carry", "elde"), "middle", "lb sm");
+    const tot = ai + bi + ci;
+    steps.push({
+      svg: tsvg(Y + 185, `Full adder for bit ${i}`, g),
+      text: L(`Bit ${i}: ${ai} + ${bi} + carry ${ci} = ${tot} (binary ${bin(tot, 2)}). The first XOR gives ${x1}, the second XOR gives the sum bit ${s[i]}. The carry ${c[i + 1]} ${i < 7 ? `moves left into bit ${i + 1}` : "leaves the adder as C"}.`,
+        `Bit ${i}: ${ai} + ${bi} + elde ${ci} = ${tot} (ikilik ${bin(tot, 2)}). İlk XOR ${x1} verir, ikinci XOR toplam biti ${s[i]}'i verir. Elde ${c[i + 1]} ${i < 7 ? `sola, bit ${i + 1}'e geçer` : "toplayıcıdan C olarak çıkar"}.`),
+    });
+  }
+  let fin = cellRow(220, 20, a, { label: "A" }) + cellRow(220, 52, bb, { label: bName });
+  fin += `<line class="wr" x1="210" y1="84" x2="${220 + 8 * CW}" y2="84"/>`;
+  fin += cellRow(220, 92, sum, { label: "S", tag: `= ${sum}` });
+  fin += txt(220, 140, `C = ${c[8]}   V = carry7 XOR carry8 = ${c[7]} XOR ${c[8]} = ${c[7] ^ c[8]}`, "start", "lb");
+  steps.push({
+    svg: tsvg(156, "Adder result", fin),
+    text: L(`All 8 columns are done: S = ${bin(sum)} = ${sum}. The last carry is C = ${c[8]}. V compares the last two carries; it is 1 only when a signed answer does not fit.`,
+      `8 sütunun hepsi bitti: S = ${bin(sum)} = ${sum}. Son elde C = ${c[8]}. V son iki eldeyi karşılaştırır; sadece işaretli sonuç sığmadığında 1 olur.`),
+  });
+  steps.check = { r: sum, c: c[8], v: c[7] ^ c[8] };
+  return steps;
+}
+
+function logicSteps(op, a, b) {
+  const name = ["AND", "OR", "XOR", "NOT"][op - 5];
+  const f = [(x, y) => x & y, (x, y) => x | y, (x, y) => x ^ y, (x) => 1 - x][op - 5];
+  let g = "";
+  for (let k = 0; k < 8; k++) {
+    const j = 7 - k, x = 20 + k * 77, ai = bit(a, j), bi = bit(b, j), r = f(ai, bi);
+    g += txt(x + 32, 18, `bit ${j}`, "middle", "lb sm");
+    g += vt(x + 18, 40, ai) + vw([[x + 18, 46], [x + 18, 78]], ai, true);
+    if (op !== 8) g += vt(x + 46, 40, bi) + vw([[x + 46, 46], [x + 46, 78]], bi, true);
+    g += gbox(x, 78, 64, 40, name, r === 1);
+    g += vw([[x + 32, 118], [x + 32, 146]], r, true) + vt(x + 32, 164, r);
+  }
+  g += txt(4, 44, "A", "start", "lb sm") + (op !== 8 ? txt(4, 60, "B", "start", "lb sm") : "");
+  let res = 0;
+  for (let j = 0; j < 8; j++) res |= f(bit(a, j), bit(b, j)) << j;
+  const rule = [L("1 only if both inputs are 1", "sadece iki giriş de 1 ise 1"), L("1 if at least one input is 1", "en az bir giriş 1 ise 1"),
+    L("1 if the inputs are different", "girişler farklıysa 1"), L("flips the bit", "biti ters çevirir")][op - 5];
+  const out = [{
+    svg: tsvg(176, `Eight ${name} gates`, g),
+    text: L(`LogicUnit8 has 8 ${name} gates side by side, one per bit, all working at once. A ${name} gate ${rule}. There is no carry, so no bit has to wait for another.`,
+      `LogicUnit8'de her bit için bir tane olmak üzere yan yana 8 ${name} kapısı var, hepsi aynı anda çalışır. ${name} kapısı ${rule}. Elde olmadığı için hiçbir bit diğerini beklemez.`),
+  }];
+  out.check = { r: res, c: 0, v: 0 };
+  return out;
+}
+
+function shiftSteps(op, a, b) {
+  const n = b & 7, steps = [];
+  const kind = op - 11; // 0 SHL, 1 SHR, 2 SAR, 3 ROL, 4 ROR
+  let intro = cellRow(220, 16, b, { label: "B", cur: (j) => j < 3, tag: `${L("amount", "miktar")} = ${bin(n, 3)} = ${n}` });
+  intro += txt(220, 70, L("Only the last 3 bits of B are used: each one switches one stage on.", "B'nin sadece son 3 biti kullanılır: her biri bir aşamayı açar."), "start", "lb sm");
+  steps.push({
+    svg: tsvg(84, "Shift amount", intro),
+    text: L(`The barrel shifter has three stages that move the bits by 1, 2 and 4 places. The last 3 bits of B (${bin(n, 3)}) say which stages are on, so the total move is ${n}.`,
+      `Barrel shifter'ın bitleri 1, 2 ve 4 basamak kaydıran üç aşaması var. B'nin son 3 biti (${bin(n, 3)}) hangi aşamaların açık olduğunu söyler, toplam kayma ${n} olur.`),
+  });
+  let v = a;
+  [1, 2, 4].forEach((k, stage) => {
+    const on = bit(n, stage), s = on ? k : 0;
+    let out = 0;
+    const src = [];
+    for (let j = 0; j < 8; j++) {
+      let from;
+      if (kind === 0) from = j - s;
+      else if (kind === 1) from = j + s < 8 ? j + s : -1;
+      else if (kind === 2) from = Math.min(j + s, 7);
+      else if (kind === 3) from = (j - s + 8) % 8;
+      else from = (j + s) % 8;
+      src.push(from);
+      if (from >= 0) out |= bit(v, from) << j;
+    }
+    const X = 200;
+    let g = cellRow(X, 16, v, { label: L("in", "giriş"), tag: String(v) });
+    for (let j = 0; j < 8; j++) {
+      if (src[j] >= 0) {
+        g += `<line class="${bit(v, src[j]) ? "w1" : "w0"}${on ? " flow" : ""}" x1="${cellX(X, src[j])}" y1="40" x2="${cellX(X, j)}" y2="94"/>`;
+      } else {
+        g += txt(cellX(X, j), 78, "0", "middle", "lb sm");
+      }
+    }
+    g += cellRow(X, 96, out, { label: L("out", "çıkış"), tag: String(out) });
+    g += gbox(30, 52, 120, 34, `move ${k}`, on === 1, on ? L("on", "açık") : L("pass", "geç"));
+    steps.push({
+      svg: tsvg(130, `Shift stage ${k}`, g),
+      text: on
+        ? L(`Stage "move ${k}" is on (B bit ${stage} = 1): every bit moves ${k} place${k > 1 ? "s" : ""} ${kind === 0 || kind === 3 ? "left" : "right"}. ${["Zeros come in on the right.", "Zeros come in on the left.", "Copies of the sign bit come in on the left.", "Bits that fall off the left come back on the right.", "Bits that fall off the right come back on the left."][kind]} Each stage is 8 Select1bit switches.`,
+          `"move ${k}" aşaması açık (B'nin ${stage}. biti = 1): her bit ${k} basamak ${kind === 0 || kind === 3 ? "sola" : "sağa"} kayar. ${["Sağdan 0'lar girer.", "Soldan 0'lar girer.", "Soldan işaret bitinin kopyaları girer.", "Soldan düşen bitler sağdan geri gelir.", "Sağdan düşen bitler soldan geri gelir."][kind]} Her aşama 8 Select1bit anahtarından oluşur.`)
+        : L(`Stage "move ${k}" is off (B bit ${stage} = 0), so the bits pass straight through.`, `"move ${k}" aşaması kapalı (B'nin ${stage}. biti = 0), bitler olduğu gibi geçer.`),
+    });
+    v = out;
+  });
+  steps.check = { r: v };
+  return steps;
+}
+
+function mulSteps(a, b) {
+  const steps = [];
+  let total = 0;
+  const X = 160, N = 16;
+  for (let j = 0; j < 8; j++) {
+    const bj = bit(b, j), pp = bj ? a << j : 0;
+    total += pp;
+    let g = cellRow(X + 8 * CW, 10, a, { label: "A", tag: String(a) }) + cellRow(X + 8 * CW, 36, b, { label: "B", cur: (k) => k === j, tag: String(b) });
+    for (let r = 0; r <= 7; r++) {
+      const y = 70 + r * 26, row = bit(b, r) ? a << r : 0;
+      g += r <= j
+        ? cellRow(X, y, row, { n: N, show: (k) => k >= r && k < r + 8, cur: (k) => r === j && k >= r && k < r + 8, label: `b${r} = ${bit(b, r)}` })
+        : txt(X - 10, y + 16, `b${r}`, "end", "lb sm");
+    }
+    g += `<line class="wr" x1="${X}" y1="282" x2="${X + N * CW}" y2="282"/>`;
+    g += cellRow(X, 290, total, { n: N, label: L("sum so far", "şu ana kadar"), tag: String(total) });
+    steps.push({
+      svg: tsvg(330, `Multiplier row ${j}`, g),
+      text: bj
+        ? L(`Row ${j}: bit ${j} of B is 1, so 8 AND gates pass A, shifted ${j} place${j === 1 ? "" : "s"} left. The adders add it: the total is now ${total}.`,
+          `Satır ${j}: B'nin ${j}. biti 1, yani 8 AND kapısı A'yı ${j} basamak sola kaydırılmış olarak geçirir. Toplayıcılar bunu ekler: toplam şimdi ${total}.`)
+        : L(`Row ${j}: bit ${j} of B is 0, so the AND gates output all zeros and nothing is added. The total stays ${total}.`,
+          `Satır ${j}: B'nin ${j}. biti 0, AND kapıları hep 0 verir ve hiçbir şey eklenmez. Toplam ${total} kalır.`),
+    });
+  }
+  const hi = total >> 8, lo = total & 0xFF;
+  let g = cellRow(160, 16, total, { n: 16, label: L("product", "çarpım"), tag: String(total) });
+  g += txt(160 + 4 * CW, 62, `Hi = ${hi}`, "middle", "lb") + txt(160 + 12 * CW, 62, `Lo = ${lo} → R`, "middle", "lb");
+  g += `<line class="w0" x1="${160 + 8 * CW - 2}" y1="10" x2="${160 + 8 * CW - 2}" y2="44"/>`;
+  steps.push({
+    svg: tsvg(80, "Product split into high and low byte", g),
+    text: L(`The full product is 16 bits: ${total}. R keeps the low 8 bits (${lo}). The high byte is ${hi}, so C and V are ${hi ? "1: the answer did not fit in 8 bits" : "0: the answer fits"}.`,
+      `Çarpımın tamamı 16 bit: ${total}. R alttaki 8 biti tutar (${lo}). Üst bayt ${hi}, bu yüzden C ve V ${hi ? "1: sonuç 8 bite sığmadı" : "0: sonuç sığıyor"}.`),
+  });
+  steps.check = { r: lo, c: hi ? 1 : 0, v: hi ? 1 : 0 };
+  return steps;
+}
+
+function divSteps(op, a, b) {
+  const steps = [];
+  let r = 0, q = 0;
+  const rows = [];
+  for (let k = 7; k >= 0; k--) {
+    const before = (r << 1) | bit(a, k), fits = b !== 0 && before >= b;
+    r = fits ? before - b : before;
+    q |= (fits ? 1 : 0) << k;
+    rows.push({ k, abit: bit(a, k), before, fits, after: r });
+  }
+  rows.forEach((row, i) => {
+    let g = cellRow(240, 10, a, { label: "A", cur: (j) => j === row.k, tag: String(a) });
+    g += txt(240, 58, `B = ${b}`, "start", "lb");
+    const hdr = [L("step", "adım"), L("bring down", "indir"), L("remainder", "kalan"), L("B fits?", "B sığar mı?"), L("new remainder", "yeni kalan")];
+    const cols = [30, 110, 230, 350, 480];
+    hdr.forEach((h, c) => { g += txt(cols[c], 90, h, "start", "lb sm"); });
+    rows.slice(0, i + 1).forEach((rw, n) => {
+      const y = 112 + n * 22, now = n === i, cls = now ? "lb" : "lb sm";
+      g += txt(cols[0], y, String(n + 1), "start", cls) + txt(cols[1], y, `A${rw.k} = ${rw.abit}`, "start", cls);
+      g += txt(cols[2], y, String(rw.before), "start", cls);
+      g += `<text class="${rw.fits ? "v1" : "v0"}" x="${cols[3]}" y="${y}">${rw.fits ? L("yes → q = 1", "evet → q = 1") : L("no → q = 0", "hayır → q = 0")}</text>`;
+      g += txt(cols[4], y, String(rw.after), "start", cls);
+    });
+    const qSoFar = rows.slice(0, i + 1).reduce((t, rw) => t | ((rw.fits ? 1 : 0) << rw.k), 0);
+    g += cellRow(240, 112 + 8 * 22, qSoFar, { label: L("quotient", "bölüm"), show: (j) => j >= row.k, cur: (j) => j === row.k });
+    steps.push({
+      svg: tsvg(112 + 8 * 22 + 36, `Division step ${i + 1}`, g),
+      text: b === 0
+        ? L(`Step ${i + 1}: B is 0, so the "B ≠ 0" gate blocks every subtraction. The quotient stays 0 and the remainder ends up as A; V will report the error.`,
+          `Adım ${i + 1}: B 0 olduğu için "B ≠ 0" kapısı her çıkarmayı engeller. Bölüm 0 kalır, kalan da A olur; V hatayı bildirecek.`)
+        : L(`Step ${i + 1} (DivStep8): bring down bit ${row.k} of A, so the remainder is ${row.before}. Comparator8bit checks ${row.before} ≥ ${b}: ${row.fits ? `yes, Subtractor8bit takes ${b} away (${row.after} left) and the quotient bit is 1` : "no, nothing is taken away and the quotient bit is 0"}.`,
+          `Adım ${i + 1} (DivStep8): A'nın ${row.k}. biti indirilir, kalan ${row.before} olur. Comparator8bit ${row.before} ≥ ${b} mi diye bakar: ${row.fits ? `evet, Subtractor8bit ${b} çıkarır (${row.after} kalır) ve bölüm biti 1 olur` : "hayır, bir şey çıkarılmaz ve bölüm biti 0 olur"}.`),
+    });
+  });
+  steps.push({
+    svg: tsvg(80, "Division result", cellRow(200, 10, q, { label: L("quotient", "bölüm"), tag: String(q) }) + cellRow(200, 42, r, { label: L("remainder", "kalan"), tag: String(r) })),
+    text: L(`After 8 steps the quotient is ${q} and the remainder is ${r}. ${op === 4 ? "DIV sends the quotient to R." : "MOD sends the remainder to R."}`,
+      `8 adımdan sonra bölüm ${q}, kalan ${r}. ${op === 4 ? "DIV bölümü R'ye gönderir." : "MOD kalanı R'ye gönderir."}`),
+  });
+  steps.check = { r: op === 4 ? q : r, c: 0, v: b === 0 ? 1 : 0 };
+  return steps;
+}
+
+function closingSteps(op, o) {
+  const steps = [];
+  let g = gbox(180, 20, 110, 70, "OpMux", true, `Op = ${bin(op, 4)}`) + vw([[60, 55], [180, 55]], 1, true) + txt(60, 47, BLOCK[op], "start", "lb sm");
+  g += vw([[290, 55], [340, 55]], 1, true) + cellRow(350, 44, o.r, { tag: `R = ${o.r}` });
+  steps.push({
+    svg: tsvg(110, "OpMux passes the result", g),
+    text: L(`OpMux16x8 lets the ${BLOCK[op]} answer through, so R = ${bin(o.r)} = ${o.r}. A second selector, OpMux16x2, picks C and V the same way.`,
+      `OpMux16x8 ${BLOCK[op]} cevabını geçirir, yani R = ${bin(o.r)} = ${o.r}. İkinci bir seçici, OpMux16x2, C ve V'yi aynı şekilde seçer.`),
+  });
+  const hi = o.r >> 4, lo = o.r & 15;
+  const seg = (nib, x) => `<g transform="translate(${x},20) scale(0.75)">${["10,4 50,4 44,10 16,10", "52,6 52,48 46,44 46,12", "52,52 52,94 46,88 46,56", "10,96 50,96 44,90 16,90", "8,52 14,56 14,88 8,94", "8,6 14,12 14,44 8,48", "12,50 18,45 42,45 48,50 42,55 18,55"].map((p, i) => `<polygon class="${HEX_SEGMENTS[nib][i] === "1" ? "seg1" : "seg0"}" points="${p}"/>`).join("")}</g>`;
+  g = cellRow(30, 20, hi, { n: 4 }) + cellRow(30, 70, lo, { n: 4 });
+  g += vw([[132, 31], [180, 31]], 1, true) + vw([[132, 81], [180, 81]], 1, true);
+  g += gbox(180, 14, 130, 34, "HexDecoder7", true) + gbox(180, 64, 130, 34, "HexDecoder7", true);
+  g += vw([[310, 31], [380, 50]], 1, true) + vw([[310, 81], [430, 70]], 1, true);
+  g += seg(hi, 390) + seg(lo, 440);
+  g += txt(536, 64, `${hex2(o.r)}`, "start", "lb");
+  steps.push({
+    svg: tsvg(112, "Hex decoders drive the display", g),
+    text: L(`R is split into two halves of 4 bits: ${bin(hi, 4)} = ${hi.toString(16).toUpperCase()} and ${bin(lo, 4)} = ${lo.toString(16).toUpperCase()}. Each HexDecoder7 lights the 7 segments for its digit, so the display shows ${hex2(o.r)}.`,
+      `R, 4 bitlik iki yarıya bölünür: ${bin(hi, 4)} = ${hi.toString(16).toUpperCase()} ve ${bin(lo, 4)} = ${lo.toString(16).toUpperCase()}. Her HexDecoder7 kendi rakamının 7 segmentini yakar, ekranda ${hex2(o.r)} görünür.`),
+  });
+  g = cellRow(40, 20, o.r, { cur: (j) => j === 7 });
+  g += gbox(280, 14, 80, 34, "NOR", o.z === 1, L("8 inputs", "8 giriş")) + vw([[244, 31], [280, 31]], o.r ? 1 : 0);
+  const led = (x, y, f, v) => `<circle class="${v ? "seg1" : "seg0"}" cx="${x}" cy="${y}" r="9"/>` + txt(x + 16, y + 5, `${f} = ${v}`, "start", "lb");
+  g += vw([[360, 31], [420, 31]], o.z) + led(440, 31, "Z", o.z);
+  g += vw([[51, 46], [51, 80], [420, 80]], o.s) + led(440, 80, "S", o.s) + txt(60, 72, "bit 7", "start", "lb sm");
+  g += led(440, 120, "C", o.c) + led(540, 120, "V", o.v);
+  steps.push({
+    svg: tsvg(140, "Flags", g),
+    text: L(`Last, the flags. Z comes from one 8-input NOR gate: it is 1 only when every bit of R is 0 (Z = ${o.z}). S is just bit 7 of R (S = ${o.s}). C = ${o.c} and V = ${o.v} come from ${BLOCK[op]}. On the next clock tick the registers store R and the flags.`,
+      `Son olarak bayraklar. Z, 8 girişli tek bir NOR kapısından gelir: R'nin her biti 0 ise 1 olur (Z = ${o.z}). S, R'nin 7. bitidir (S = ${o.s}). C = ${o.c} ve V = ${o.v}, ${BLOCK[op]}'den gelir. Bir sonraki saat tıkında register'lar R'yi ve bayrakları kaydeder.`),
+  });
+  return steps;
+}
+
+function traceSteps(op, a, b) {
+  const o = alu(op, a, b);
+  let mid;
+  if (op <= 3) mid = adderSteps(op, a, b);
+  else if (op === 4 || op === 9) mid = divSteps(op, a, b);
+  else if (op <= 8) mid = logicSteps(op, a, b);
+  else if (op === 10) mid = mulSteps(a, b);
+  else mid = shiftSteps(op, a, b);
+  const all = [overviewStep(op), ...mid, ...closingSteps(op, o)];
+  all.check = mid.check;  // what the walk-through computed, for tests/check_demo.js
+  return all;
+}
+
+// Simple mode: the same journey told with lamps, a dial and everyday arithmetic,
+// for readers who have never seen a logic gate. simpleSteps().check is tested too.
+const MACHINES = {
+  Adder8bit: ["Adder", "Toplayıcı", "+"], Subtractor8bit: ["Subtractor", "Çıkarıcı", "−"],
+  INC8bit: ["Add one", "Bir artırıcı", "+1"], DEC8bit: ["Take one", "Bir azaltıcı", "−1"],
+  DIV8bit: ["Divider", "Bölücü", "÷"], LogicUnit8: ["Logic unit", "Mantık birimi", "?"],
+  MUL8bit: ["Multiplier", "Çarpıcı", "×"], ShiftLeft8: ["Shifter", "Kaydırıcı", "<<"],
+  ShiftRight8: ["Shifter", "Kaydırıcı", ">>"], RotateLeft8: ["Rotator", "Döndürücü", "↺"],
+  RotateRight8: ["Rotator", "Döndürücü", "↻"],
+};
+const machineName = (op) => { const m = MACHINES[BLOCK[op]]; return L(m[0], m[1]); };
+const machineSym = (op) => (op >= 5 && op <= 8 ? OPS[op][0] : op === 9 ? "mod" : MACHINES[BLOCK[op]][2]);
+const usesB = (op) => op !== 2 && op !== 3 && op !== 8;
+const PLACE = [128, 64, 32, 16, 8, 4, 2, 1];
+const LX = (j) => 150 + (7 - j) * 44;  // lamp column for bit j
+const lamp = (x, y, on, r = 12) => `<circle class="${on ? "lamp1" : "lamp0"}" cx="${x}" cy="${y}" r="${r}"/>`;
+const lampRow = (y, v, label, tag = "") => txt(110, y + 5, label, "end", "lb") +
+  PLACE.map((p, k) => lamp(LX(7 - k), y, v & p)).join("") + (tag ? txt(500, y + 6, tag, "start", "big") : "");
+const lampSum = (v) => (v ? PLACE.filter((p) => v & p).join(" + ") : "0");
+
+// The four-stage picture on top of every simple step.
+function strip(on, op, a, b, r) {
+  const st = (k) => (on.includes(k) ? "hl" : k > Math.max(...on) ? "dim" : "");
+  const box = (k, x, w, body) => `<g class="${st(k) === "dim" ? "dimg" : ""}"><rect class="bx${st(k) === "hl" ? " hl" : ""}" x="${x}" y="10" width="${w}" height="80" rx="8"/>${body}</g>`;
+  const wire = (k, x1, x2) => `<polyline class="${on.includes(k) ? "w1 flow" : k <= Math.max(...on) ? "w1" : "w0"}" points="${x1},50 ${x2},50" fill="none" marker-end="MARK"/>`;
+  let s = box(0, 10, 130, txt(75, 32, L("Numbers", "Sayılar"), "middle", "lb sm") +
+    txt(75, usesB(op) ? 56 : 66, `A = ${a}`, "middle", "mid") + (usesB(op) ? txt(75, 78, `B = ${b}`, "middle", "mid") : ""));
+  s += wire(1, 140, 186) + box(1, 190, 150, txt(265, 32, machineName(op), "middle", "lb sm") + txt(265, 72, machineSym(op), "middle", "huge"));
+  s += wire(2, 340, 386) + box(2, 390, 100, txt(440, 32, L("Picker", "Seçici"), "middle", "lb sm") + [420, 440, 460].map((x) => `<polyline class="wr" points="${x},50 440,72" fill="none"/>`).join("") + `<polyline class="wr" points="440,72 440,82" fill="none"/>`);
+  s += wire(3, 490, 536) + box(3, 540, 90, txt(585, 32, L("Display", "Ekran"), "middle", "lb sm") +
+    txt(585, 72, on.includes(3) ? hex2(r) : "··", "middle", "huge segt"));
+  return s;
+}
+const sstep = (on, op, a, b, r, h, label, body, text) => ({ svg: tsvg(110 + h, label, strip(on, op, a, b, r) + `<g transform="translate(0,110)">${body}</g>`), text });
+
+// 0..255 drawn as a dial: past 255 it comes back round to 0, like a car's odometer.
+function dial(cx, cy, R, from, span, dir) {
+  const pt = (v) => { const t = (v / 256) * 2 * Math.PI - Math.PI / 2; return [cx + R * Math.cos(t), cy + R * Math.sin(t)].map((n) => n.toFixed(1)); };
+  let s = `<circle class="ring" cx="${cx}" cy="${cy}" r="${R}"/>`;
+  [0, 64, 128, 192].forEach((v) => { const [x, y] = pt(v), dx = x - cx, dy = y - cy; s += txt(cx + dx * 1.22, cy + dy * 1.22 + 4, v, "middle", "lb sm"); });
+  const to = (((from + dir * span) % 256) + 256) % 256;
+  if (span % 256) {
+    const [x1, y1] = pt(from), [x2, y2] = pt(to), m = span % 256;
+    s += `<path class="w1 flow arc" d="M${x1},${y1} A${R},${R} 0 ${m > 128 ? 1 : 0} ${dir > 0 ? 1 : 0} ${x2},${y2}" fill="none" marker-end="MARK"/>`;
+  }
+  const [ax, ay] = pt(from), [bx, by] = pt(to);
+  return s + `<circle class="dotA" cx="${ax}" cy="${ay}" r="6"/><circle class="lamp1" cx="${bx}" cy="${by}" r="7"/>`;
+}
+
+function computeStep(op, a, b, o, on) {
+  const S = (h, label, body, text) => sstep(on, op, a, b, o.r, h, label, body, text);
+  if (op <= 3 || op === 10) {
+    const dir = op === 1 || op === 3 ? -1 : 1, span = [b, b, 1, 1][op] ?? a * b, from = op === 10 ? 0 : a;
+    const big = op === 10 ? a * b : a + dir * span, r = (((from + dir * span) % 256) + 256) % 256;
+    let body = dial(150, 95, 70, from, span, dir);
+    body += txt(300, 60, `${sumText(op, a, b).replace(/ =$/, "")} = ${big}`, "start", "big");
+    body += `<circle class="dotA" cx="306" cy="150" r="6"/>` + txt(318, 155, op === 10 ? L("start: 0", "başlangıç: 0") : L(`start: A = ${a}`, `başlangıç: A = ${a}`), "start", "lb sm") +
+      `<circle class="lamp1" cx="306" cy="172" r="6"/>` + txt(318, 177, L(`answer: ${r}`, `cevap: ${r}`), "start", "lb sm");
+    if (big !== r) body += txt(300, 96, big < 0 ? L(`goes below 0, wraps round → ${r}`, `0'ın altına iner, başa sarar → ${r}`) : L(`doesn't fit, wraps round → ${r}`, `sığmaz, başa sarar → ${r}`), "start", "lb") +
+      (op === 10 ? txt(300, 120, L(`(${Math.floor(big / 256)} full turns of 256)`, `(256'lık ${Math.floor(big / 256)} tam tur)`), "start", "lb sm") : "");
+    const why = {
+      0: L("The adder works like adding on paper, column by column from the right, carrying to the next column. Its 8 lamps hold 0 to 255, so picture a dial.",
+        "Toplayıcı kâğıtta alt alta toplama gibi çalışır: sağdan sola sütun sütun, taşanı bir sonraki sütuna elde verir. 8 lamba 0 ile 255 arasını tutar, bunu bir kadran gibi düşün."),
+      1: L("The subtractor walks the dial backwards. Inside, it actually adds: it flips B and adds it, which lands on the same spot.",
+        "Çıkarıcı kadranda geri gider. İçeride aslında toplama yapar: B'yi ters çevirip ekler, aynı yere varır."),
+      2: L("This machine moves A one step forward on the dial.", "Bu makine A'yı kadranda bir adım ileri götürür."),
+      3: L("This machine moves A one step back on the dial.", "Bu makine A'yı kadranda bir adım geri götürür."),
+      10: L("The multiplier works like long multiplication on paper: for each digit of B it adds a shifted copy of A, or nothing.",
+        "Çarpıcı kâğıttaki alt alta çarpma gibi çalışır: B'nin her hanesi için A'nın kaydırılmış bir kopyasını ekler ya da eklemez."),
+    }[op];
+    const wrap = big !== r ? (big > 255 ? L(` ${big} is more than 255, so it goes past 0 and lands on ${r}.`, ` ${big}, 255'ten büyük, o yüzden 0'ı geçip ${r}'de durur.`)
+      : L(` Below 0 the dial comes round to 255, so it lands on ${r}.`, ` 0'ın altına inince kadran 255'e döner, ${r}'de durur.`)) : L(` It lands on ${r}.`, ` ${r}'de durur.`);
+    const st = S(190, "The calculation on a 0 to 255 dial", body, why + wrap);
+    st.r = r;
+    return st;
+  }
+  if (op === 4 || op === 9) {
+    let body, text, r;
+    if (b === 0) {
+      r = op === 4 ? 0 : a;
+      body = txt(320, 60, `${a} ÷ 0 ?`, "middle", "huge") + lamp(320, 110, 1, 14) + txt(345, 116, L("error lamp", "hata lambası"), "start", "lb");
+      text = L(`Nobody can divide by 0, not even a circuit. The divider gives ${r} and turns on the error lamp V.`,
+        `0'a bölmeyi kimse yapamaz, devre de yapamaz. Bölücü ${r} verir ve V hata lambasını yakar.`);
+    } else {
+      const q = Math.floor(a / b), m = a % b, sc = a ? 560 / a : 0;
+      body = txt(40, 24, `A = ${a}`, "start", "lb") + `<rect class="ring" x="40" y="34" width="560" height="34" rx="4"/>`;
+      for (let k = 0; k < q; k++) body += `<rect class="pp" x="${(40 + k * b * sc).toFixed(1)}" y="34" width="${(b * sc).toFixed(1)}" height="34"/>`;
+      if (m) body += `<rect class="rest" x="${(40 + q * b * sc).toFixed(1)}" y="34" width="${(m * sc).toFixed(1)}" height="34"/>`;
+      body += txt(40, 96, L(`B = ${b} fits ${q} times`, `B = ${b}, ${q} kere sığar`), "start", "big") +
+        txt(600, 96, L(`left over: ${m}`, `artan: ${m}`), "end", "big");
+      r = op === 4 ? q : m;
+      text = L(`The divider asks how many times ${b} fits into ${a}, like long division on paper. It fits ${q} times and ${m} is left over. ${op === 4 ? `DIV keeps the count: ${q}.` : `MOD keeps what is left over: ${m}.`}`,
+        `Bölücü, kâğıttaki uzun bölme gibi ${b}'in ${a}'nın içine kaç kere sığdığını sorar. ${q} kere sığar, ${m} artar. ${op === 4 ? `DIV kaç kere sığdığını tutar: ${q}.` : `MOD artanı tutar: ${m}.`}`);
+    }
+    const st = S(130, "Division as fitting B into A", body, text);
+    st.r = r;
+    return st;
+  }
+  if (op <= 8) {
+    const f = [(x, y) => x & y, (x, y) => x | y, (x, y) => x ^ y, (x) => ~x][op - 5];
+    const r = f(a, b) & 0xFF;
+    let body = PLACE.map((p, k) => (r & p ? `<rect class="pp" x="${LX(7 - k) - 19}" y="2" width="38" height="${op === 8 ? 96 : 136}" rx="6"/>` : "")).join("");
+    body += lampRow(20, a, "A", a) + (op === 8 ? "" : lampRow(64, b, "B", b)) + lampRow(op === 8 ? 76 : 116, r, L("Result", "Sonuç"), r);
+    const q = [L("are both lamps on?", "iki lamba da yanıyor mu?"), L("is at least one lamp on?", "en az bir lamba yanıyor mu?"),
+      L("is exactly one lamp on?", "sadece bir lamba mı yanıyor?"), L("flip it: on becomes off, off becomes on", "tersine çevir: yanan söner, sönük yanar")][op - 5];
+    const st = S(op === 8 ? 100 : 140, "Column by column lamp question", body,
+      L(`The logic unit looks at each column of lamps separately and asks one question: ${q} Where the answer is yes, the result lamp turns on. The lit result lamps add up to ${r}.`,
+        `Mantık birimi her lamba sütununa ayrı ayrı bakar ve tek bir soru sorar: ${q} Cevap evetse sonuç lambası yanar. Yanan sonuç lambalarının toplamı ${r}.`));
+    st.r = r;
+    return st;
+  }
+  const n = b & 7, left = op === 11 || op === 14, rot = op >= 14;
+  const dst = (j) => (rot ? (left ? (j + n) % 8 : (j + 8 - n) % 8) : left ? j + n : j - n);
+  let r = 0;
+  for (let j = 0; j < 8; j++) { const d = dst(j); if (d >= 0 && d < 8 && bit(a, j)) r |= 1 << d; }
+  if (op === 13 && bit(a, 7)) for (let d = 8 - n; d < 8; d++) r |= 1 << d;
+  let body = lampRow(20, a, "A", a) + lampRow(110, r, L("Result", "Sonuç"), r);
+  for (let j = 0; j < 8; j++) {
+    if (!bit(a, j) || !n) continue;
+    const d = dst(j), out = d < 0 || d > 7;
+    body += `<polyline class="${out ? "w0" : "w1 flow"}" points="${LX(j)},34 ${out ? (d > 7 ? 120 : 470) : LX(d)},${out ? 60 : 96}" fill="none" marker-end="MARK"/>`;
+  }
+  if (!rot && n && [...Array(8).keys()].some((j) => bit(a, j) && (dst(j) < 0 || dst(j) > 7))) body += txt(left ? 120 : 470, 76, L("lost", "düştü"), "middle", "lb sm");
+  if (op === 13 && bit(a, 7) && n) body += txt(LX(7), 70, L("copied", "kopya"), "middle", "lb sm");
+  const how = {
+    11: L(`Every lamp moves ${n} places to the left. Lamps pushed off the edge are lost and empty places fill with off lamps. One place left doubles a number, like adding a 0 in decimal.`,
+      `Her lamba ${n} basamak sola kayar. Kenardan taşanlar kaybolur, boş kalan yerlere sönük lamba gelir. Bir basamak sola kaydırmak sayıyı 2 ile çarpar, onluk tabanda sona 0 eklemek gibi.`),
+    12: L(`Every lamp moves ${n} places to the right and the ones pushed off the edge are lost. One place right halves a number.`,
+      `Her lamba ${n} basamak sağa kayar, kenardan taşanlar kaybolur. Bir basamak sağa kaydırmak sayıyı yarıya böler.`),
+    13: L(`Like a right shift, but the leftmost lamp is copied into the empty places. That lamp is the minus sign for signed numbers, so negatives stay negative.`,
+      `Sağa kaydırma gibi, ama en soldaki lamba boş yerlere kopyalanır. O lamba işaretli sayılarda eksi işaretidir, böylece negatif sayı negatif kalır.`),
+    14: L(`Every lamp moves ${n} places to the left, and the ones that fall off the left end come back in on the right, like a clock going round.`,
+      `Her lamba ${n} basamak sola kayar, soldan düşenler sağdan geri girer, dönen bir saat gibi.`),
+    15: L(`Every lamp moves ${n} places to the right, and the ones that fall off the right end come back in on the left.`,
+      `Her lamba ${n} basamak sağa kayar, sağdan düşenler soldan geri girer.`),
+  }[op];
+  const st = S(140, "Lamps moving sideways", body,
+    L(`B says how far to move: only 0 to 7 places make sense, so the circuit uses the remainder of ${b} ÷ 8, which is ${n}. `, `Ne kadar kaydıracağını B söyler: sadece 0 ile 7 arası anlamlı, o yüzden devre ${b} ÷ 8'in kalanını kullanır, yani ${n}. `) + how);
+  st.r = r;
+  return st;
+}
+
+function simpleSteps(op, a, b) {
+  const o = alu(op, a, b), steps = [];
+  let body = PLACE.map((p, k) => txt(LX(7 - k), 6, p, "middle", "lb sm")).join("");
+  body += lampRow(32, a, "A", a) + (usesB(op) ? lampRow(76, b, "B", b) : "");
+  steps.push(sstep([0], op, a, b, o.r, usesB(op) ? 100 : 56, "Numbers as 8 lamps", body,
+    L(`Inside the circuit a number travels on 8 wires, and each wire is a lamp that is on or off. Every lamp has a value written above it; add up the lit ones and you get the number: ${a} = ${lampSum(a)}.${usesB(op) ? ` And ${b} = ${lampSum(b)}.` : ""}`,
+      `Devrenin içinde bir sayı 8 telden geçer, her tel yanan ya da sönük bir lamba gibidir. Her lambanın üstünde bir değer yazar; yananları toplarsan sayıyı bulursun: ${a} = ${lampSum(a)}.${usesB(op) ? ` Ve ${b} = ${lampSum(b)}.` : ""}`)));
+  const tiles = ["Adder8bit", "Subtractor8bit", "INC8bit", "DEC8bit", "DIV8bit", "LogicUnit8", "MUL8bit", "ShiftLeft8", "ShiftRight8", "RotateLeft8", "RotateRight8"];
+  body = tiles.map((n, k) => {
+    const x = 18 + (k % 6) * 102, y = 4 + Math.floor(k / 6) * 62, act = n === BLOCK[op];
+    return `<g class="${act ? "" : "dimg"}"><rect class="bx${act ? " hl" : ""}" x="${x}" y="${y}" width="94" height="52" rx="6"/>` +
+      txt(x + 47, y + 22, L(MACHINES[n][0], MACHINES[n][1]), "middle", "lb sm") + txt(x + 47, y + 44, act ? machineSym(op) : MACHINES[n][2], "middle", "mid") + "</g>";
+  }).join("");
+  steps.push(sstep([1], op, a, b, o.r, 124, "One small machine per operation", body,
+    L(`The ALU is a box of small machines, one for each kind of operation. All of them work on A and B at the same time. Picking ${OPS[op][0]} just decides whose answer we keep: the ${machineName(op).toLowerCase()}.`,
+      `ALU küçük makinelerden oluşan bir kutu, her işlem türü için bir makine var. Hepsi A ve B üzerinde aynı anda çalışır. ${OPS[op][0]} seçmek sadece hangi makinenin cevabını alacağımızı belirler. Bu sefer: ${machineName(op)}.`)));
+  const mid = computeStep(op, a, b, o, [1]);
+  steps.push(mid);
+  const hi = o.r >> 4, lo = o.r & 15;
+  body = lampRow(20, o.r, "R", o.r) + txt(320, 76, `${o.r} = ${hi} × 16 + ${lo}`, "middle", "big") +
+    txt(320, 106, L(`→ digits ${hi.toString(16).toUpperCase()} and ${lo.toString(16).toUpperCase()} → ${hex2(o.r)}`, `→ ${hi.toString(16).toUpperCase()} ve ${lo.toString(16).toUpperCase()} haneleri → ${hex2(o.r)}`), "middle", "lb");
+  steps.push(sstep([2, 3], op, a, b, o.r, 116, "Picker and display", body,
+    L(`The picker lets the ${machineName(op).toLowerCase()}'s answer through: ${o.r}. The display has only two digits, so it counts in sixteens (0 to 9, then A to F for 10 to 15). ${o.r} is ${hi} sixteens and ${lo} more, so it shows ${hex2(o.r)}.`,
+      `Seçici bu makinenin cevabını geçirir: ${o.r}. Ekranda sadece iki hane var, o yüzden 16'şar sayar (0–9, sonra 10–15 için A–F). ${o.r}, ${hi} tane 16 ve ${lo} artan demek, ekranda ${hex2(o.r)} görünür.`)));
+  const F = [["Z", L("zero", "sıfır"), o.z], ["C", L("carry", "elde"), o.c], ["S", L("sign", "işaret"), o.s], ["V", L("overflow / error", "taşma / hata"), o.v]];
+  body = F.map(([f, n, v], k) => lamp(80 + k * 150, 30, v, 16) + txt(80 + k * 150, 70, f, "middle", "mid") + txt(80 + k * 150, 90, n, "middle", "lb sm")).join("");
+  const lit = [...flagLines(op, o).matchAll(/<div class="flag on">.*?<\/b> (.*?)<\/span><\/div>/g)].map((m) => m[1]);
+  steps.push(sstep([3], op, a, b, o.r, 100, "Warning lamps", body,
+    (lit.length ? L("Four small lamps tell you more about the answer. ", "Dört küçük lamba cevap hakkında ek bilgi verir. ") + lit.join(" ")
+      : L("Four small lamps tell you more about the answer. None is on: the answer is not 0, it fit, and nothing went wrong.", "Dört küçük lamba cevap hakkında ek bilgi verir. Hiçbiri yanmıyor: sonuç 0 değil, sığdı ve sorun yok.")) +
+    L(" Want to see the real gates doing all this? Switch to Detailed.", " Bütün bunları yapan gerçek kapıları görmek ister misin? Detaylı'ya geç.")));
+  steps.check = { r: mid.r };
+  return steps;
+}
+</script>
+
 <script>
 const $ = (id) => document.getElementById(id);
 const spaced = (v) => v.toString(2).padStart(8, "0").replace(/(....)/, "$1 ");
@@ -778,6 +1344,7 @@ function render() {
   $("flags").innerHTML = flagLines(state.op, o);
   if (state.op !== lastOp) { lastOp = state.op; showBlock(OP_DIAGRAM[state.op]); }
   renderFsm();
+  renderTrace();
 }
 
 function readNum(id, key) {
@@ -859,6 +1426,48 @@ $("bLoad").addEventListener("click", () => { sys.load = !sys.load; renderFsm(); 
 $("bExec").addEventListener("click", () => { sys.exec = !sys.exec; renderFsm(); });
 $("bTick").addEventListener("click", () => tick(false));
 $("bReset").addEventListener("click", () => tick(true));
+
+// Step-by-step player for the chosen operation.
+const player = { steps: [], i: 0, key: "", timer: null, mode: "simple" };
+try { if (localStorage.getItem("traceMode") === "detail") player.mode = "detail"; } catch (e) {}
+function renderTrace() {
+  const key = `${state.op},${state.a},${state.b},${player.mode}`;
+  if (key !== player.key) { player.key = key; player.i = 0; stopPlay(); }
+  player.steps = (player.mode === "simple" ? simpleSteps : traceSteps)(state.op, state.a, state.b);
+  $("tSimple").setAttribute("aria-pressed", String(player.mode === "simple"));
+  $("tDetail").setAttribute("aria-pressed", String(player.mode === "detail"));
+  showStep();
+}
+function showStep() {
+  const st = player.steps[player.i], n = player.steps.length;
+  $("tStage").innerHTML = st.svg;
+  $("tText").textContent = st.text;
+  $("tCount").textContent = `${player.i + 1} / ${n}`;
+  $("tBar").style.width = `${((player.i + 1) / n) * 100}%`;
+  $("tPrev").disabled = player.i === 0;
+  $("tNext").disabled = player.i === n - 1;
+  $("tPlay").textContent = player.timer ? L("❚❚ Pause", "❚❚ Durdur") : (player.i === n - 1 ? L("▶ Play again", "▶ Tekrar oynat") : L("▶ Play", "▶ Oynat"));
+  $("tRestart").textContent = L("Start over", "Baştan");
+}
+function stopPlay() { clearInterval(player.timer); player.timer = null; }
+function go(i) { player.i = Math.max(0, Math.min(player.steps.length - 1, i)); showStep(); }
+$("tPlay").addEventListener("click", () => {
+  if (player.timer) { stopPlay(); showStep(); return; }
+  if (player.i === player.steps.length - 1) player.i = 0;
+  player.timer = setInterval(() => {
+    if (player.i >= player.steps.length - 1) { stopPlay(); showStep(); return; }
+    go(player.i + 1);
+  }, 2600);
+  showStep();
+});
+$("tPrev").addEventListener("click", () => { stopPlay(); go(player.i - 1); });
+$("tNext").addEventListener("click", () => { stopPlay(); go(player.i + 1); });
+$("tRestart").addEventListener("click", () => { stopPlay(); go(0); });
+for (const [id, mode] of [["tSimple", "simple"], ["tDetail", "detail"]]) $(id).addEventListener("click", () => {
+  player.mode = mode;
+  try { localStorage.setItem("traceMode", mode); } catch (e) {}
+  renderTrace();
+});
 
 function setLang(lang) {
   LANG = lang;
