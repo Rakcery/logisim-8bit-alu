@@ -8,8 +8,13 @@ Usage: python3 tools/gen_blocks.py ALU.circ path/to/logisim-evolution.jar
 """
 import sys
 
-from circgen import (Block, build, clock, constant, dff, gate, led, seven_seg_display,
+import os
+
+from asm import assemble, rom_contents
+from circgen import (Block, build, clock, constant, dff, gate, led, rom, seven_seg_display,
                      splitter, sub)
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 N = 8
 
@@ -392,6 +397,22 @@ def labeled(comp, label):
     return comp
 
 
+def decimal_digits():
+    """Three HexDecoder7 + displays for nets dh, dt, do; hundreds and tens go dark when hon / ton are 0."""
+    decoders, blanks, displays = [], [], []
+    for digit, on in (("dh", "hon"), ("dt", "ton"), ("do", None)):
+        dec = sub("HexDecoder7", 7).to("In", digit)
+        disp = seven_seg_display()
+        for k, seg in enumerate("abcdefg"):
+            dec.to(seg, f"{digit}_{seg}" if on else f"{digit}_{seg}_on")
+            disp.to(f"end{k}", f"{digit}_{seg}_on")
+            if on:
+                blanks.append(gate("AND Gate").to_many("in", [f"{digit}_{seg}", on]).to("out", f"{digit}_{seg}_on"))
+        decoders.append(dec)
+        displays.append(disp)
+    return decoders, blanks, displays
+
+
 def main_circuit():
     """Top level: registers, ALUCore8, ControlUnit, two hex digits, three decimal digits and flag LEDs.
 
@@ -432,17 +453,9 @@ def main_circuit():
             disp.to(f"end{k}", f"{digit}_{seg}")
         decoders.append(dec)
         displays.append(disp)
-    blanks = []
-    for digit, on in (("dh", "hon"), ("dt", "ton"), ("do", None)):
-        dec = sub("HexDecoder7", 7).to("In", digit)
-        disp = seven_seg_display()
-        for k, seg in enumerate("abcdefg"):
-            dec.to(seg, f"{digit}_{seg}" if on else f"{digit}_{seg}_on")
-            disp.to(f"end{k}", f"{digit}_{seg}_on")
-            if on:
-                blanks.append(gate("AND Gate").to_many("in", [f"{digit}_{seg}", on]).to("out", f"{digit}_{seg}_on"))
-        decoders.append(dec)
-        displays.append(disp)
+    dec_d, blanks, disp_d = decimal_digits()
+    decoders += dec_d
+    displays += disp_d
     b.column(decoders)
     b.column(blanks)
     b.column(displays + [led(f"{f}Led").to("end0", f) for f in "ZCSV"]
@@ -450,11 +463,125 @@ def main_circuit():
     return b
 
 
+def mux4x8(sel, inputs, out, tag):
+    """4:1 selector for 8-bit buses from three Select8bit; sel is a 2-bit net."""
+    return [split(sel, f"{tag}s", 2),
+            sub("Select8bit", 3).to("Sel", f"{tag}s0").to("X", inputs[0]).to("Y", inputs[1]).to("Out", f"{tag}01"),
+            sub("Select8bit", 3).to("Sel", f"{tag}s0").to("X", inputs[2]).to("Y", inputs[3]).to("Out", f"{tag}23"),
+            sub("Select8bit", 3).to("Sel", f"{tag}s1").to("X", f"{tag}01").to("Y", f"{tag}23").to("Out", out)]
+
+
+def regfile4x8():
+    """Four Register8bit, one write port, two read ports. Reset clears all four on the clock edge.
+
+    R0..R3 are extra outputs so the registers can be watched and tested.
+    """
+    b = Block("RegFile4x8", [("D", 8), ("WSel", 2), ("WE", 1), ("RSelA", 2), ("RSelB", 2), ("CLK", 1),
+                             ("Reset", 1)],
+              [("QA", 8), ("QB", 8), ("R0", 8), ("R1", 8), ("R2", 8), ("R3", 8)])
+    b.column([split("WSel", "w", 2), constant(8, 0).to("out", "zero8")])
+    b.column([gate("NOT Gate").to("in0", f"w{k}").to("out", f"nw{k}") for k in range(2)]
+             + [sub("Select8bit", 3).to("Sel", "Reset").to("X", "D").to("Y", "zero8").to("Out", "dd")])
+    b.column([gate("AND Gate", 3).to_many("in", ["WE", "w1" if i >> 1 else "nw1", "w0" if i & 1 else "nw0"])
+              .to("out", f"we{i}") for i in range(4)])
+    b.column([gate("OR Gate").to_many("in", [f"we{i}", "Reset"]).to("out", f"ld{i}") for i in range(4)])
+    b.column([labeled(sub("Register8bit", 3), f"R{i}").to("Load", f"ld{i}").to("D", "dd").to("CLK", "CLK")
+              .to("Q", f"R{i}") for i in range(4)])
+    regs = [f"R{i}" for i in range(4)]
+    b.column(mux4x8("RSelA", regs, "QA", "a") + mux4x8("RSelB", regs, "QB", "b"))
+    return b
+
+
+def pc8():
+    """Program counter: Q+1 every tick, D when Jump, unchanged when Hold, 0 after Reset."""
+    b = Block("PC8", [("D", 8), ("Jump", 1), ("Hold", 1), ("CLK", 1), ("Reset", 1)], [("Q", 8)])
+    b.column([sub("INC8bit", 3).to("A", "Q").to("S", "inc"), constant(8, 0).to("out", "zero8"),
+              gate("NOT Gate").to("in0", "Hold").to("out", "nhold")])
+    b.column([sub("Select8bit", 3).to("Sel", "Jump").to("X", "inc").to("Y", "D").to("Out", "nx"),
+              gate("OR Gate").to_many("in", ["nhold", "Reset"]).to("out", "ld")])
+    b.column([sub("Select8bit", 3).to("Sel", "Reset").to("X", "nx").to("Y", "zero8").to("Out", "dd")])
+    b.column([sub("Register8bit", 3).to("Load", "ld").to("D", "dd").to("CLK", "CLK").to("Q", "Q")])
+    return b
+
+
+def decoder16():
+    """Instruction word -> control signals. op = Instr[15:12]; ALU opcode = Instr[3:0].
+
+    0000 ALU, 0001 LDI, 0010 MOV, 0011 JMP, 0100 JZ, 0101 JNZ, 0110 JC, 0111 OUT, 1000 HALT.
+    WSrc: 00 = ALU result, 01 = immediate (LDI), 10 = rs (MOV). 1001-1111 do nothing.
+    """
+    b = Block("Decoder16", [("Instr", 16), ("Z", 1), ("C", 1)],
+              [("AluOp", 4), ("RegWrite", 1), ("WSrc", 2), ("Jump", 1), ("FlagWrite", 1),
+               ("OutWrite", 1), ("Halt", 1)])
+    # rd, rs and imm[7:4] are not needed here.
+    b.column([merge("Instr", [f"i{k}" for k in range(4)] + [None] * 8 + [f"i{k}" for k in range(12, 16)])])
+    b.column([gate("NOT Gate").to("in0", f"i{k}").to("out", f"ni{k}") for k in range(12, 16)]
+             + [gate("NOT Gate").to("in0", "Z").to("out", "nz"), merge("AluOp", [f"i{k}" for k in range(4)])])
+    names = {0: "FlagWrite", 1: "ldi", 2: "mov", 3: "jmp", 4: "jz", 5: "jnz", 6: "jc", 7: "OutWrite", 8: "Halt"}
+    b.column([gate("AND Gate", 4).to_many("in", [f"i{k}" if (op >> (k - 12)) & 1 else f"ni{k}" for k in range(12, 16)])
+              .to("out", net) for op, net in names.items()])
+    b.column([gate("AND Gate").to_many("in", ["jz", "Z"]).to("out", "tz"),
+              gate("AND Gate").to_many("in", ["jnz", "nz"]).to("out", "tnz"),
+              gate("AND Gate").to_many("in", ["jc", "C"]).to("out", "tc"),
+              gate("OR Gate", 3).to_many("in", ["FlagWrite", "ldi", "mov"]).to("out", "RegWrite"),
+              merge("WSrc", ["ldi", "mov"])])
+    b.column([gate("OR Gate", 4).to_many("in", ["jmp", "tz", "tnz", "tc"]).to("out", "Jump")])
+    return b
+
+
+def cpu_circuit():
+    """Single-cycle mini CPU: ROM -> Decoder16 -> RegFile4x8 + ALUCore8, one instruction per tick.
+
+    The ROM holds programs/fibonacci.asm. Reset (synchronous) sets PC, registers, flags and the
+    display to 0. Output pins mirror the state so programs can be checked by test vectors.
+    """
+    words = assemble(open(os.path.join(ROOT, "programs", "fibonacci.asm")).read())
+    b = Block("cpu", [("Reset", 1)],
+              [("PC", 8), ("R0", 8), ("R1", 8), ("R2", 8), ("R3", 8), ("Out", 8), ("Z", 1), ("C", 1), ("Halt", 1)])
+    b.column([clock("CLK").to("end0", "clk"), constant(8, 0).to("out", "zero8"),
+              constant(1, 0).to("out", "zero"), gate("NOT Gate").to("in0", "Reset").to("out", "nreset")])
+    b.column([labeled(sub("PC8", 5), "PC").to("D", "imm").to("Jump", "Jump").to("Hold", "Halt").to("CLK", "clk")
+              .to("Reset", "Reset").to("Q", "PC")])
+    b.column([labeled(rom(rom_contents(words)), "Program").to("end0", "PC").to("end1", "instr")])
+    b.column([merge("instr", [f"in{k}" for k in range(12)] + [None] * 4),
+              sub("Decoder16", 7).to("Instr", "instr").to("Z", "Z").to("C", "C").to("AluOp", "aluop")
+              .to("RegWrite", "RegWrite").to("WSrc", "wsrc").to("Jump", "Jump").to("FlagWrite", "FlagWrite")
+              .to("OutWrite", "OutWrite").to("Halt", "Halt")])
+    b.column([merge("rd", ["in10", "in11"]), merge("rs", ["in8", "in9"]), merge("imm", [f"in{k}" for k in range(8)]),
+              split("wsrc", "ws", 2)])
+    b.column([sub("RegFile4x8", 7).to("D", "wd").to("WSel", "rd").to("WE", "RegWrite").to("RSelA", "rd")
+              .to("RSelB", "rs").to("CLK", "clk").to("Reset", "Reset").to("QA", "qa").to("QB", "qb")
+              .to("R0", "R0").to("R1", "R1").to("R2", "R2").to("R3", "R3")])
+    b.column([sub("ALUCore8", 5).to("A", "qa").to("B", "qb").to("Op", "aluop").to("R", "r").to("Z", "az")
+              .to("C", "ac")])
+    b.column([sub("Select8bit", 3).to("Sel", "ws0").to("X", "r").to("Y", "imm").to("Out", "w1"),
+              gate("AND Gate").to_many("in", ["az", "nreset"]).to("out", "fz"),
+              gate("AND Gate").to_many("in", ["ac", "nreset"]).to("out", "fc"),
+              gate("OR Gate").to_many("in", ["FlagWrite", "Reset"]).to("out", "fld"),
+              gate("OR Gate").to_many("in", ["OutWrite", "Reset"]).to("out", "old"),
+              sub("Select8bit", 3).to("Sel", "Reset").to("X", "qb").to("Y", "zero8").to("Out", "od")])
+    b.column([sub("Select8bit", 3).to("Sel", "ws1").to("X", "w1").to("Y", "qb").to("Out", "wd"),
+              labeled(sub("Register4bit", 6), "Flags").to("Load", "fld").to("CLK", "clk")
+              .to("D0", "fz").to("D1", "fc").to("D2", "zero").to("D3", "zero").to("Q0", "Z").to("Q1", "C"),
+              labeled(sub("Register8bit", 3), "Display").to("Load", "old").to("D", "od").to("CLK", "clk")
+              .to("Q", "Out")])
+    b.column([sub("BinToBCD8", 3).to("In", "Out").to("Hundreds", "dh").to("Tens", "dt").to("Ones", "do")])
+    b.column([split("dh", "dh", 4), split("dt", "dt", 4)])
+    b.column([gate("OR Gate", 4).to_many("in", [f"dh{k}" for k in range(4)]).to("out", "hon"),
+              gate("OR Gate", 5).to_many("in", ["hon"] + [f"dt{k}" for k in range(4)]).to("out", "ton")])
+    decoders, blanks, displays = decimal_digits()
+    b.column(decoders)
+    b.column(blanks)
+    b.column(displays + [led("HaltLed").to("end0", "Halt"), led("ZLed").to("end0", "Z"), led("CLed").to("end0", "C")])
+    return b
+
+
 BLOCKS = [adder8bit, subtractor8bit, lambda: incdec("INC8bit", 0x00, 1),
           lambda: incdec("DEC8bit", 0xFF, 0), register8bit, logicunit8, select8bit,
           comparator8bit, zerodetect8, lambda: opmux16(8), lambda: opmux16(2), divstep8,
           div8bit, mul8bit, shiftleft8, shiftright8, rotateleft8, rotateright8, alucore8,
-          hexdecoder7, add3, bintobcd8, controlunit, main_circuit]
+          hexdecoder7, add3, bintobcd8, controlunit, main_circuit, regfile4x8, pc8, decoder16,
+          cpu_circuit]
 
 
 def main(circ, jar):

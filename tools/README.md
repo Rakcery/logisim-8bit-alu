@@ -17,6 +17,7 @@ python3 tools/circ_ports.py ALU.circ         # print port order of every subcirc
 | `circgen.py` | Layout, XML writing, and the probe-based connection step. |
 | `probe/Probe.java` | Loads a `.circ` with Logisim and prints the real location of every port, so no coordinate is guessed. |
 | `probe/SeqTest.java` | Sequential test-vector runner (Logisim 4.0.0's `--test-vector` resets state on every row). |
+| `asm.py` | Assembler for the mini CPU: `.asm` → `.hex` ROM image, optionally loaded straight into `ALU.circ`. |
 | `circ_ports.py` | Prints each subcircuit's port order (inputs left, outputs right, sorted by pin (y, x)). |
 
 ## How the scripted blocks are wired

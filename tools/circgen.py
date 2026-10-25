@@ -80,6 +80,12 @@ def seven_seg_display():
     return Comp(LIB_IO, "7-Segment Display", {}, "display", 100, 100)
 
 
+def rom(contents):
+    """Logisim ROM, 8-bit address, 16-bit data. Ends: 0 = address, 1 = data."""
+    return Comp(LIB_MEMORY, "ROM", {"addrWidth": "8", "dataWidth": "16", "contents": contents},
+                "rom", 180, 260)
+
+
 def sub(name, n_ports):
     return Comp(None, name, {}, "sub", n_ports * 20 + 60, 420)
 
@@ -113,7 +119,8 @@ class Block:
             col_w = max(c.width_px for c in col)
             y = 100
             for c in col:
-                c.loc = (x + col_w - 20, y)
+                # Most components are anchored at their right side; a ROM at its top left.
+                c.loc = (x, y) if c.kind == "rom" else (x + col_w - 20, y)
                 y += c.height + 20
             x += col_w + 60
         y = 100

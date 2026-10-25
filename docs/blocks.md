@@ -29,6 +29,10 @@ These subcircuits are built by `tools/gen_blocks.py`. Everything else in
 | BinToBCD8 | In[8] → Hundreds[4], Tens[4], Ones[4] | 7× Add3 in the shift-and-add-3 (double dabble) pattern | 256 (exhaustive) |
 | ControlUnit | CLK, Reset, Load, Execute → LoadAB, LoadOut, S0, S1 | Moore FSM, 2× D flip-flop: IDLE 00 →(Load) LOAD 01 → EXECUTE 10 →(Execute) DISPLAY 11 → IDLE; synchronous Reset; LoadAB = LOAD, LoadOut = EXECUTE | 464 (sequential) |
 | main | A[8], B[8], Op[4], Load, Execute, Reset → R[8], Z, C, S, V, S0, S1, Dec[12] | Clock, ControlUnit, RegisterA/B and OutputRegister (Register8bit), FlagRegister (Register4bit: Q0=Z, Q1=C, Q2=S, Q3=V), ALUCore8, 2× HexDecoder7 for the hex digits, BinToBCD8 + 3× HexDecoder7 for the decimal digits (leading zeros switched off with AND gates), flag and state LEDs; output pins mirror the displays for testing (Dec = hundreds, tens, ones, 4 bits each) | 535 (sequential, clock ticks) |
+| RegFile4x8 | D[8], WSel[2], WE, RSelA[2], RSelB[2], CLK, Reset → QA[8], QB[8], R0[8], R1[8], R2[8], R3[8] | 4× Register8bit; write enable = WE · (2→4 decoder of WSel); two 4:1 read selectors (3× Select8bit each); Reset loads 0 into all four | 306 (sequential) |
+| PC8 | D[8], Jump, Hold, CLK, Reset → Q[8] | Register8bit + INC8bit + Select8bit: Q+1, or D when Jump; Hold keeps Q; Reset → 0 | 412 (sequential) |
+| Decoder16 | Instr[16], Z, C → AluOp[4], RegWrite, WSrc[2], Jump, FlagWrite, OutWrite, Halt | 4→16 decoder of Instr[15:12] (NOT + AND4), jump conditions with Z and C; AluOp = Instr[3:0] | 392 |
+| cpu | Reset → PC[8], R0[8] … R3[8], Out[8], Z, C, Halt | Clock, ROM 256×16 (`Program`, holds programs/fibonacci.asm), PC8, Decoder16, RegFile4x8, ALUCore8, write-back selectors (2× Select8bit), Flags (Register4bit), Display (Register8bit) → BinToBCD8 → 3 decimal digits; one instruction per tick | 140 (sequential, runs the whole program) |
 
 Reused from v1 without changes: HalfAdder, FullAdder, Select1bit, Register4bit.
 v1 SevenSegment was dropped from v2 (it lit the wrong segments for 6, 7, d and E); it is still in `v1/ALU.circ`.

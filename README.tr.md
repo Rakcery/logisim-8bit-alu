@@ -38,6 +38,7 @@ register kullanılmadı.
 | **Kaydırma / döndürme** | SHL, SHR, SAR, ROL, ROR, 0 ile 7 basamak arası (barrel shifter) |
 | **Bayraklar** | Z sıfır, C elde, S işaret, V taşma ya da hata |
 | **Kontrol** | 4 durumlu Moore FSM: IDLE → LOAD → EXECUTE → DISPLAY |
+| **CPU** | ROM'daki programları çalıştıran mini işlemci (bkz. [Mini CPU](#mini-cpu)) |
 | **Çıkış** | 7 segment ekranlar: iki onaltılık hane ve üç onluk hane (kapılardan yapılmış ikilikten onluğa çevirici), bayrak ve durum LED'leri |
 
 ## Tarayıcıda dene
@@ -134,6 +135,46 @@ stateDiagram-v2
     DISPLAY --> IDLE: tık
 ```
 
+## Mini CPU
+
+Aynı dosyada ikinci bir üst devre daha var: **`cpu`**. ALU'nun etrafına kurulmuş,
+hafızadaki programı kendi kendine çalıştıran küçük bir işlemci. Her saat tıkında
+bir komut çalıştırır. İçinde hazır bir Fibonacci programı var: onluk ekranda
+0, 1, 1, 2, 3, 5 … 233 sayar ve durur.
+
+1. `ALU.circ`'i aç, devre listesinde **`cpu`**'ya çift tıkla.
+2. **Reset**'i 1 yap, bir kere tıklat (Ctrl+T), tekrar 0 yap.
+3. Ctrl+T ile adım adım ilerlet ya da **Simulate → Ticks Enabled** (Ctrl+K) ile
+   kendi kendine çalışsın. Program bitince **Halt** LED'i yanar.
+
+| Parça | Ne yapar |
+|---|---|
+| `Program` (ROM, 256 × 16 bit) | programı tutar (Logisim'in hazır ROM'u, kapılardan yapılmamış tek parça) |
+| `PC8` | program sayacı: sıradaki adres ya da atlanacak adres |
+| `Decoder16` | komutu kontrol sinyallerine çevirir (sadece kapılar) |
+| `RegFile4x8` | dört 8 bitlik register R0–R3, bir yazma iki okuma portu |
+| `ALUCore8` | yukarıdaki ALU, bütün hesapları yapar |
+| `Flags`, `Display` | atlamalar için Z ve C'yi, ekrandaki sayıyı hatırlar |
+
+**Komutlar** (16 bit: `op[15:12] rd[11:10] rs[9:8] imm[7:0]`):
+
+| op | Komut | Ne yapar |
+|---|---|---|
+| `0000` | `ADD rd, rs` (16 ALU işleminden herhangi biri) | rd = rd işlem rs, Z ve C güncellenir |
+| `0001` | `LDI rd, n` | rd = n |
+| `0010` | `MOV rd, rs` | rd = rs |
+| `0011` | `JMP etiket` | atla |
+| `0100` | `JZ etiket` | Z = 1 ise atla |
+| `0101` | `JNZ etiket` | Z = 0 ise atla |
+| `0110` | `JC etiket` | C = 1 ise atla |
+| `0111` | `OUT rs` | rs'yi ekranda göster |
+| `1000` | `HALT` | dur |
+
+**Diğer programlar:** [`programs/`](programs/) klasöründe `countdown` (10'dan 0'a)
+ve `multiply` (döngüyle 7 × 6) var. Logisim'de `Program` ROM'una sağ tıkla →
+**Load Image…** ve bir `.hex` dosyası seç. Kendi programını yazmak için `.asm`
+olarak kaydet ve `python3 tools/asm.py programs/seninki.asm` çalıştır.
+
 ## 4 bitlik ders projesinden v2'ye
 
 Bu proje, İstanbul Sağlık ve Teknoloji Üniversitesi'ndeki *Digital Logic Design*
@@ -166,7 +207,7 @@ JAR=$(bash tools/get_logisim.sh)         # Logisim Evolution 4.0.0'ı indirir
 python3 tests/run_tests.py "$JAR"
 ```
 
-Saatle çalışan bloklar (register'lar, ControlUnit, main) `tools/probe/SeqTest.java`
+Saatle çalışan bloklar (register'lar, ControlUnit, PC8, RegFile4x8, main, cpu) `tools/probe/SeqTest.java`
 ile test edilir, çünkü Logisim'in kendi test aracı her satırda durumu sıfırlıyor.
 GitHub Actions her push'ta bütün testleri çalıştırır.
 
@@ -181,7 +222,8 @@ böylece bir blokta yapılan değişiklik saniyeler içinde yeniden üretilip te
 | `v1/` | orijinal 4 bitlik ders projesi |
 | `docs/` | tarayıcıdaki oyun alanı, blok listesi, v1 incelemesi |
 | `images/` | README'deki görseller |
-| `tools/` | blok üretici ve Logisim yardımcıları |
+| `programs/` | mini CPU için örnek programlar (`.asm` kaynak, `.hex` ROM görüntüsü) |
+| `tools/` | blok üretici, assembler ve Logisim yardımcıları |
 | `tests/` | test vektörleri ve çalıştırıcı |
 
 ## Yazar

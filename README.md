@@ -37,6 +37,7 @@ a hex and a decimal display. No prebuilt adders, multiplexers or registers.
 | **Shift / rotate** | SHL, SHR, SAR, ROL, ROR by 0 to 7 places (barrel shifter) |
 | **Flags** | Z zero, C carry, S sign, V overflow or error |
 | **Control** | 4-state Moore FSM: IDLE → LOAD → EXECUTE → DISPLAY |
+| **CPU** | a mini processor that runs programs from ROM (see [Mini CPU](#mini-cpu)) |
 | **Output** | 7-segment displays: two hex digits and three decimal digits (gate-level binary to decimal converter), flag and state LEDs |
 
 ## Try it in your browser
@@ -135,6 +136,46 @@ stateDiagram-v2
     DISPLAY --> IDLE: tick
 ```
 
+## Mini CPU
+
+The same file has a second top-level circuit, **`cpu`**: a small processor built
+around the ALU that runs a program from memory by itself, one instruction per
+clock tick. It comes loaded with a Fibonacci program that counts
+0, 1, 1, 2, 3, 5 … 233 on the decimal display and then stops.
+
+1. Open `ALU.circ` and double-click **`cpu`** in the circuit list.
+2. Set **Reset** to 1, tick once (Ctrl+T), set it back to 0.
+3. Tick with Ctrl+T, or let it run with **Simulate → Ticks Enabled** (Ctrl+K).
+   The **Halt** LED lights up when the program ends.
+
+| Part | What it does |
+|---|---|
+| `Program` (ROM, 256 × 16 bit) | holds the program (Logisim's built-in ROM, the one part not made of gates) |
+| `PC8` | program counter: next address, or a jump target |
+| `Decoder16` | turns an instruction into control signals (gates only) |
+| `RegFile4x8` | four 8-bit registers R0–R3, one write and two read ports |
+| `ALUCore8` | the ALU above, does every calculation |
+| `Flags`, `Display` | remember Z and C for jumps, and the number on the display |
+
+**Instructions** (16 bits: `op[15:12] rd[11:10] rs[9:8] imm[7:0]`):
+
+| op | Instruction | Does |
+|---|---|---|
+| `0000` | `ADD rd, rs` (any of the 16 ALU operations) | rd = rd op rs, updates Z and C |
+| `0001` | `LDI rd, n` | rd = n |
+| `0010` | `MOV rd, rs` | rd = rs |
+| `0011` | `JMP label` | jump |
+| `0100` | `JZ label` | jump if Z = 1 |
+| `0101` | `JNZ label` | jump if Z = 0 |
+| `0110` | `JC label` | jump if C = 1 |
+| `0111` | `OUT rs` | show rs on the display |
+| `1000` | `HALT` | stop |
+
+**Other programs:** [`programs/`](programs/) has `countdown` (10 to 0) and
+`multiply` (7 × 6 with a loop). In Logisim, right-click the `Program` ROM →
+**Load Image…** and pick a `.hex` file. To write your own, save it as `.asm` and run
+`python3 tools/asm.py programs/yours.asm`.
+
 ## From the 4-bit course project to v2
 
 This started as the final project of the *Digital Logic Design* course at
@@ -167,7 +208,7 @@ JAR=$(bash tools/get_logisim.sh)         # downloads Logisim Evolution 4.0.0
 python3 tests/run_tests.py "$JAR"
 ```
 
-Clocked blocks (registers, ControlUnit, main) run through
+Clocked blocks (registers, ControlUnit, PC8, RegFile4x8, main, cpu) run through
 `tools/probe/SeqTest.java`, because Logisim's built-in runner resets the state on
 every row. GitHub Actions runs the whole suite on every push.
 
@@ -182,7 +223,8 @@ change to one block can be rebuilt and retested in seconds.
 | `v1/` | original 4-bit course project |
 | `docs/` | browser playground, block list, v1 review |
 | `images/` | pictures used in this README |
-| `tools/` | block builder and Logisim helpers |
+| `programs/` | example programs for the mini CPU (`.asm` source, `.hex` ROM image) |
+| `tools/` | block builder, assembler and Logisim helpers |
 | `tests/` | test vectors and runner |
 
 ## Author

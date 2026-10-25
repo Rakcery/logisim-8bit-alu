@@ -10,8 +10,10 @@ Usage: python3 tests/gen_vectors.py
 import itertools
 import os
 import random
+import sys
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vectors")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EDGES = [0x00, 0x01, 0x02, 0x0F, 0x10, 0x55, 0x7E, 0x7F, 0x80, 0x81, 0xAA, 0xF0, 0xFE, 0xFF]
 RANDOM_PAIRS = 2000
 # ALUCore8 runs slowly in Logisim (every row re-simulates DIV and MUL), so it
@@ -161,10 +163,104 @@ def main():
     write("Add3", ["In[4]", "Out[4]"], [[b(v, 4), b(v + 3 if v >= 5 else v, 4)] for v in range(16)])
     write("BinToBCD8", ["In[8]", "Hundreds[4]", "Tens[4]", "Ones[4]"],
           [[b(v, 8), b(v // 100, 4), b(v // 10 % 10, 4), b(v % 10, 4)] for v in range(256)])
+    write("RegFile4x8", ["D[8]", "WSel[2]", "WE", "RSelA[2]", "RSelB[2]", "CLK", "Reset",
+                         "QA[8]", "QB[8]", "R0[8]", "R1[8]", "R2[8]", "R3[8]"], regfile_rows(), sequential=True)
+    write("PC8", ["D[8]", "Jump", "Hold", "CLK", "Reset", "Q[8]"], pc_rows(), sequential=True)
+    write("Decoder16", ["Instr[16]", "Z", "C", "AluOp[4]", "RegWrite", "WSrc[2]", "Jump", "FlagWrite",
+                        "OutWrite", "Halt"],
+          [[b(i, 16), str(z), str(c)] + [b(v, w) for v, w in zip(decode(i, z, c), (4, 1, 2, 1, 1, 1, 1))]
+           for i in decoder_instrs() for z in (0, 1) for c in (0, 1)])
+    write("cpu", ["tick", "Reset", "PC[8]", "R0[8]", "R1[8]", "R2[8]", "R3[8]", "Out[8]", "Z", "C", "Halt"],
+          cpu_rows(), sequential=True)
     write("ControlUnit", ["CLK", "Reset", "Load", "Execute", "LoadAB", "LoadOut", "S0", "S1"],
           controlunit_rows(), sequential=True)
     write("main", ["tick", "Reset", "Load", "Execute", "A[8]", "B[8]", "Op[4]",
                    "R[8]", "Z", "C", "S", "V", "S0", "S1", "Dec[12]"], main_rows(), sequential=True)
+
+
+def regfile_rows():
+    rng = random.Random(21)
+    regs, rows = [0] * 4, []
+    steps = [(1, 0, 0, 0, 0, 0)] + [(0, rng.randrange(256), rng.randrange(4), rng.randrange(2),
+                                     rng.randrange(4), rng.randrange(4)) for _ in range(150)]
+    steps += [(1, 77, 2, 1, 2, 3), (0, 9, 1, 0, 1, 2)]
+    for reset, d, ws, we, ra, rb in steps:
+        for clk in (0, 1):
+            if clk:
+                if reset:
+                    regs = [0] * 4
+                elif we:
+                    regs[ws] = d
+            rows.append([b(d, 8), b(ws, 2), str(we), b(ra, 2), b(rb, 2), str(clk), str(reset),
+                         b(regs[ra], 8), b(regs[rb], 8)] + [b(r, 8) for r in regs])
+    return rows
+
+
+def pc_rows():
+    rng = random.Random(22)
+    q, rows = 0, []
+    steps = [(0, 0, 0, 1)] + [(rng.randrange(256), int(rng.random() < 0.3), int(rng.random() < 0.2),
+                                int(rng.random() < 0.05)) for _ in range(200)]
+    steps += [(0, 0, 0, 0)] * 3 + [(0, 0, 0, 1)] + [(5, 1, 1, 0)]  # Hold beats Jump
+    for d, jump, hold, reset in steps:
+        for clk in (0, 1):
+            if clk:
+                q = 0 if reset else q if hold else d if jump else (q + 1) & 0xFF
+            rows.append([b(d, 8), str(jump), str(hold), str(clk), str(reset), b(q, 8)])
+    return rows
+
+
+def decode(instr, z, c):
+    """Decoder16 model: (AluOp, RegWrite, WSrc, Jump, FlagWrite, OutWrite, Halt)."""
+    op = instr >> 12
+    jump = op == 3 or (op == 4 and z) or (op == 5 and not z) or (op == 6 and c)
+    return (instr & 15, int(op in (0, 1, 2)), {1: 1, 2: 2}.get(op, 0), int(jump), int(op == 0),
+            int(op == 7), int(op == 8))
+
+
+def decoder_instrs():
+    rng = random.Random(23)
+    return [op << 12 | rng.randrange(4096) for op in range(16) for _ in range(6)] + [0, 0xFFFF]
+
+
+def cpu_program():
+    sys.path.insert(0, os.path.join(ROOT, "tools"))
+    from asm import assemble
+    return assemble(open(os.path.join(ROOT, "programs", "fibonacci.asm")).read())
+
+
+def cpu_step(rom, st, reset):
+    """One clock tick of the single-cycle CPU. st = dict(pc, regs, out, z, c)."""
+    if reset:
+        return dict(pc=0, regs=[0] * 4, out=0, z=0, c=0)
+    st = dict(st, regs=list(st["regs"]))
+    instr = rom[st["pc"]] if st["pc"] < len(rom) else 0
+    op, rd, rs, imm = instr >> 12, (instr >> 10) & 3, (instr >> 8) & 3, instr & 0xFF
+    a, bb = st["regs"][rd], st["regs"][rs]
+    _alu, regwrite, wsrc, jump, flagwrite, outwrite, halt = decode(instr, st["z"], st["c"])
+    r, z, c, _s, _v = alu(instr & 15, a, bb)
+    if regwrite:
+        st["regs"][rd] = [r, imm, bb][wsrc]
+    if flagwrite:
+        st["z"], st["c"] = z, c
+    if outwrite:
+        st["out"] = bb
+    if not halt:
+        st["pc"] = imm if jump else (st["pc"] + 1) & 0xFF
+    return st
+
+
+def cpu_rows():
+    """Run the ROM program (programs/fibonacci.asm) from Reset until well after HALT."""
+    rom, rows = cpu_program(), []
+    st = dict(pc=0, regs=[0] * 4, out=0, z=0, c=0)
+    for t in range(140):
+        reset = int(t == 0 or t == 120)
+        st = cpu_step(rom, st, reset)
+        halt = int(st["pc"] < len(rom) and rom[st["pc"]] >> 12 == 8)
+        rows.append(["1", str(reset), b(st["pc"], 8)] + [b(r, 8) for r in st["regs"]]
+                    + [b(st["out"], 8), str(st["z"]), str(st["c"]), str(halt)])
+    return rows
 
 
 def fsm_next(state, reset, load, execute):
