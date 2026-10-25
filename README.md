@@ -44,10 +44,12 @@ a hex and a decimal display. No prebuilt adders, multiplexers or registers.
 
 Not everyone has Logisim installed, so [`docs/index.html`](docs/index.html) is a
 one-page guide ([live here](https://rakcery.github.io/logisim-8bit-alu/)) to the project, in English and Turkish. Enter two numbers, pick an operation, and see the
-result, the hex display and what each flag light means. Below that, every block
-has a small schematic: click a box to open it, all the way from `main` down to a
-single register bit. The page's math is checked against the same test vectors as
-the circuit.
+result on the hex and decimal displays and what each flag light means. A step-by-step
+player follows your numbers through the blocks, and the Mini CPU section runs the
+example programs (or your own) one tick at a time, showing every register. Below that,
+every block has a small schematic: click a box to open it, all the way from `main` down
+to a single register bit. The page's math and its CPU are checked against the same
+test vectors as the circuit.
 
 ## How it is built
 

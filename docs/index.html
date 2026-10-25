@@ -93,6 +93,11 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 .result-top { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
 .display { background: var(--soft); border-radius: 8px; padding: 12px 14px; display: flex; gap: 8px; flex: none; }
 .digit { width: 44px; height: auto; }
+.displays { display: flex; gap: 10px; flex-wrap: wrap; }
+.dispbox { margin: 0; display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.dispbox figcaption { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+.display.small .digit { width: 30px; }
+.display.small { padding: 9px 11px; gap: 6px; }
 .digit .s { fill: var(--seg-off); }
 .digit .s.lit { fill: var(--seg); }
 .answer { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
@@ -223,6 +228,33 @@ figcaption { font-size: 0.92rem; }
 .key .k8 { border-top: 3.5px solid var(--accent); }
 footer { font-size: 0.85rem; color: var(--muted); }
 code { font-family: var(--font-display); font-size: 0.85em; }
+
+/* mini CPU */
+.cpu-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 600px) { .cpu-grid { grid-template-columns: minmax(0, 1fr); } }
+.cpu-list { border-collapse: collapse; width: 100%; font-family: var(--font-display); font-size: 0.76rem; }
+.cpu-list td { padding: 3px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.cpu-list td.ad, .cpu-list td.hx { color: var(--muted); }
+.cpu-list td.lb { color: var(--accent); }
+.cpu-list tr.next td { background: color-mix(in srgb, var(--accent) 16%, transparent); font-weight: 700; }
+.cpu-list tr.next td.ad::before { content: "▶ "; color: var(--accent); }
+.cpu-list tr.done td { background: color-mix(in srgb, var(--on) 10%, transparent); }
+.cpu-scroll { overflow: auto; max-height: 340px; border: 1px solid var(--line); border-radius: 8px; }
+.cpu-state { display: flex; flex-direction: column; gap: 10px; }
+.regs4 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.regbox { background: var(--soft); border-radius: 8px; padding: 7px 10px; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.regbox span { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+.regbox b { font-family: var(--font-display); font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.regbox i { font-style: normal; font-family: var(--font-display); font-size: 0.66rem; color: var(--muted); letter-spacing: 0.05em; }
+.regbox.chg { outline: 2px solid var(--on); }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip { font-family: var(--font-display); font-size: 0.7rem; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.chip.on { background: var(--on); border-color: var(--on); color: #fff; }
+.chip.halt.on { background: var(--seg); border-color: var(--seg); }
+.cpu-text { font-size: 0.95rem; min-height: 3.2em; margin: 0; }
+.cpu-src { width: 100%; min-height: 220px; font-family: var(--font-display); font-size: 0.8rem; padding: 10px; border-radius: 8px; border: 1.5px solid var(--line); background: var(--bg); color: var(--ink); resize: vertical; }
+.cpu-err { color: var(--seg); font-size: 0.88rem; margin: 0; }
+details summary { cursor: pointer; font-weight: 600; }
 @media (max-width: 420px) { .nums { grid-template-columns: minmax(0, 1fr); } .big { font-size: 1.8rem; } }
 </style>
 </head>
@@ -238,7 +270,7 @@ code { font-family: var(--font-display); font-size: 0.85em; }
       <button id="langBtn" type="button" lang="tr">Türkçe</button>
     </div>
     <nav class="toc" aria-label="Sections">
-      <a data-tr="Dene" href="#try">Try it</a><a data-tr="Adım adım" href="#watch">Step by step</a><a data-tr="İçinde ne var" href="#inside">What is inside</a><a data-tr="Bitler" href="#bits">Bits</a>
+      <a data-tr="Dene" href="#try">Try it</a><a data-tr="Adım adım" href="#watch">Step by step</a><a data-tr="Mini CPU" href="#cpu">Mini CPU</a><a data-tr="İçinde ne var" href="#inside">What is inside</a><a data-tr="Bitler" href="#bits">Bits</a>
       <a data-tr="Saat" href="#clock">The clock</a><a data-tr="v1&#x27;den v2&#x27;ye" href="#story">v1 to v2</a>
     </nav>
   </header>
@@ -262,7 +294,10 @@ code { font-family: var(--font-display); font-size: 0.85em; }
   <section class="card" aria-labelledby="s3" aria-live="polite">
     <h2 data-tr="&lt;span class=&quot;step-no&quot;&gt;3&lt;/span&gt;Sonuca bak" id="s3"><span class="step-no">3</span>See the result</h2>
     <div class="result-top">
-      <div class="display" id="display" role="img"></div>
+      <div class="displays">
+        <figure class="dispbox"><div class="display" id="display" role="img"></div><figcaption data-tr="onaltılık">hex</figcaption></figure>
+        <figure class="dispbox"><div class="display" id="decDisplay" role="img"></div><figcaption data-tr="onluk">decimal</figcaption></figure>
+      </div>
       <div class="answer">
         <span class="sum" id="sum"></span>
         <span class="big" id="big"></span>
@@ -292,6 +327,39 @@ code { font-family: var(--font-display); font-size: 0.85em; }
     <div class="trace-bar"><i id="tBar"></i></div>
     <div class="dia-scroll trace-stage" id="tStage"></div>
     <p class="trace-text" id="tText" aria-live="polite"></p>
+  </section>
+
+  <span data-tr="Mini CPU" class="part" id="cpu">Mini CPU</span>
+
+  <section class="card" aria-labelledby="cpuTitle">
+    <h2 data-tr="ALU&#x27;nun etrafında minik bir bilgisayar" id="cpuTitle">A tiny computer around the ALU</h2>
+    <p data-tr="Aynı dosyadaki &lt;code&gt;cpu&lt;/code&gt; devresi bu ALU&#x27;yu kullanarak bir programı kendi kendine çalıştırır, her saat tıkında bir komut. Bir program seç ve Adım&#x27;a bas: işaretli satır sıradaki komut, ne değiştirdiğini görürsün. Buradaki her şey Logisim&#x27;deki devreyle birebir aynı çalışır." class="note">The <code>cpu</code> circuit in the same file uses this ALU to run a program by itself, one instruction per clock tick. Pick a program and press Step: the highlighted line runs next, and you see what it changes. Everything here behaves exactly like the circuit in Logisim.</p>
+    <div class="picker" id="cpuProgs"></div>
+    <div class="cpu-grid">
+      <div class="cpu-scroll"><table class="cpu-list" id="cpuList"></table></div>
+      <div class="cpu-state">
+        <div class="regs4" id="cpuRegs"></div>
+        <div class="chips" id="cpuFlags"></div>
+        <figure class="dispbox" style="align-items:flex-start"><div class="display small" id="cpuDisplay" role="img"></div><figcaption data-tr="ekran (OUT)">display (OUT)</figcaption></figure>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn primary" id="cpuStep"></button>
+      <button class="btn" id="cpuRun"></button>
+      <button class="btn" id="cpuReset"></button>
+      <span class="trace-count" id="cpuTicks"></span>
+    </div>
+    <p class="cpu-text" id="cpuText" aria-live="polite"></p>
+    <div class="group"><span class="group-name" data-tr="Decoder16 bu komut için hangi sinyalleri açtı">Signals Decoder16 turned on for this instruction</span><div class="chips" id="cpuSig"></div></div>
+    <details id="cpuOwn">
+      <summary data-tr="Kendi programını yaz">Write your own program</summary>
+      <div class="card" style="padding:12px;margin-top:8px;gap:8px">
+        <p data-tr="Komutlar: &lt;code&gt;ADD SUB INC DEC DIV AND OR XOR NOT MOD MUL SHL SHR SAR ROL ROR rd, rs&lt;/code&gt; (rd = rd işlem rs), &lt;code&gt;LDI rd, n&lt;/code&gt;, &lt;code&gt;MOV rd, rs&lt;/code&gt;, &lt;code&gt;JMP&lt;/code&gt; / &lt;code&gt;JZ&lt;/code&gt; / &lt;code&gt;JNZ&lt;/code&gt; / &lt;code&gt;JC etiket&lt;/code&gt;, &lt;code&gt;OUT rs&lt;/code&gt;, &lt;code&gt;HALT&lt;/code&gt;. Register&#x27;lar R0–R3, sayılar 0–255, &lt;code&gt;;&lt;/code&gt; yorum başlatır." class="note" style="margin:0">Instructions: <code>ADD SUB INC DEC DIV AND OR XOR NOT MOD MUL SHL SHR SAR ROL ROR rd, rs</code> (rd = rd op rs), <code>LDI rd, n</code>, <code>MOV rd, rs</code>, <code>JMP</code> / <code>JZ</code> / <code>JNZ</code> / <code>JC label</code>, <code>OUT rs</code>, <code>HALT</code>. Registers R0 to R3, numbers 0 to 255, <code>;</code> starts a comment.</p>
+        <textarea class="cpu-src" id="cpuSrc" spellcheck="false" aria-label="Program source"></textarea>
+        <div class="controls"><button class="btn primary" id="cpuLoad"></button></div>
+        <p class="cpu-err" id="cpuErr" role="alert"></p>
+      </div>
+    </details>
   </section>
 
   <span data-tr="İçinde ne var" class="part" id="inside">What is inside</span>
@@ -358,7 +426,7 @@ code { font-family: var(--font-display); font-size: 0.85em; }
       <tr><td data-tr="İşlemler">Operations</td><td data-tr="9, 3 bitlik opcode ile">9, on a 3-bit opcode</td><td data-tr="16, 4 bitlik opcode ile (MOD, MUL, kaydırma ve döndürme eklendi)">16, on a 4-bit opcode (adds MOD, MUL, shifts, rotates)</td></tr>
       <tr><td data-tr="Bayraklar">Flags</td><td data-tr="Z, C, S (C her zaman toplayıcıyı gösteriyordu)">Z, C, S (C always showed the adder)</td><td data-tr="Z, C, S, V, her işlemde doğru">Z, C, S, V, correct for every operation</td></tr>
       <tr><td data-tr="Kontrol birimi">Control unit</td><td data-tr="kendi saatiyle çalışıyordu, register&#x27;ları sürmüyordu">ran on its own clock, did not drive the registers</td><td data-tr="ortak saatle register yüklemelerini sürüyor">drives the register loads on the shared clock</td></tr>
-      <tr><td data-tr="Ekran">Display</td><td data-tr="1 rakam, 6, 7, d, E için yanlış segmentler">1 digit, wrong segments for 6, 7, d, E</td><td data-tr="2 onaltılık rakam, 16 değerin hepsi doğru">2 hex digits, all 16 values correct</td></tr>
+      <tr><td data-tr="Ekran">Display</td><td data-tr="1 rakam, 6, 7, d, E için yanlış segmentler">1 digit, wrong segments for 6, 7, d, E</td><td data-tr="2 onaltılık + 3 onluk rakam, baştaki sıfırlar sönük">2 hex digits plus 3 decimal digits, leading zeros dark</td></tr>
       <tr><td data-tr="Test">Testing</td><td data-tr="elle">by hand</td><td data-tr="Logisim&#x27;de çalışan 37.000+ otomatik test">37,000+ automatic test cases run in Logisim</td></tr>
     </table></div>
   </section>
@@ -1272,6 +1340,122 @@ function simpleSteps(op, a, b) {
 }
 </script>
 
+<script id="cpu">
+// Mini CPU model: the same assembler as tools/asm.py and the same single-cycle step
+// as cpu_step() in tests/gen_vectors.py. tests/check_demo.js checks both.
+const CPU_ALU = ["ADD", "SUB", "INC", "DEC", "DIV", "AND", "OR", "XOR", "NOT", "MOD", "MUL", "SHL", "SHR", "SAR", "ROL", "ROR"];
+const CPU_OPS = { LDI: 1, MOV: 2, JMP: 3, JZ: 4, JNZ: 5, JC: 6, OUT: 7, HALT: 8 };
+const PROGRAMS = {
+  fibonacci: `; Fibonacci numbers on the display: 0 1 1 2 3 5 8 13 ... 233, then stop.
+        LDI R0, 0
+        LDI R1, 1
+loop:   OUT R0          ; show the current number
+        MOV R2, R0
+        ADD R2, R1      ; R2 = R0 + R1, C = 1 if it went past 255
+        JC  done
+        MOV R0, R1
+        MOV R1, R2
+        JMP loop
+done:   OUT R1          ; last one that fits: 233
+        HALT
+`,
+  countdown: `; Counts down from 10 to 0 on the display.
+        LDI R0, 10
+        LDI R1, 1
+loop:   OUT R0
+        SUB R0, R1      ; R0 = R0 - 1, Z = 1 when it reaches 0
+        JNZ loop
+        OUT R0          ; show the 0
+        HALT
+`,
+  multiply: `; 7 x 6 by adding 7 six times. The MUL instruction does it in one step;
+; this shows how a loop works.
+        LDI R0, 0       ; total
+        LDI R1, 7       ; number to add
+        LDI R2, 6       ; how many times
+        LDI R3, 1
+loop:   ADD R0, R1
+        SUB R2, R3      ; one fewer to go, Z = 1 when done
+        JNZ loop
+        OUT R0          ; 42
+        HALT
+`,
+};
+
+// Returns { words, lines: [{ text, label }], labels } or throws Error("line N: ...").
+function assemble(src) {
+  const lines = [], labels = {};
+  src.split("\n").forEach((raw, k) => {
+    let line = raw.split(";")[0].trim(), label = "";
+    while (line.includes(":")) {
+      const i = line.indexOf(":");
+      label = line.slice(0, i).trim();
+      labels[label] = lines.length;
+      line = line.slice(i + 1).trim();
+    }
+    if (line) lines.push({ n: k + 1, text: line, label });
+  });
+  const reg = (t) => {
+    const m = /^R([0-3])$/i.exec(t || "");
+    if (!m) throw new Error(`expected a register R0..R3, got "${t || ""}"`);
+    return Number(m[1]);
+  };
+  const num = (t) => {
+    if (t === undefined || !/^(0x[0-9a-f]+|0b[01]+|\d+)$/i.test(t)) throw new Error(`expected a number, got "${t || ""}"`);
+    return Number(t);
+  };
+  const words = lines.map(({ n, text }) => {
+    const [name0, ...rest] = text.replace(/,/g, " ").split(/\s+/);
+    const name = name0.toUpperCase();
+    try {
+      if (CPU_ALU.includes(name)) return reg(rest[0]) << 10 | (rest.length > 1 ? reg(rest[1]) : 0) << 8 | CPU_ALU.indexOf(name);
+      if (name === "LDI") {
+        const v = num(rest[1]);
+        if (v > 255) throw new Error("value must be 0..255");
+        return 1 << 12 | reg(rest[0]) << 10 | v;
+      }
+      if (name === "MOV") return 2 << 12 | reg(rest[0]) << 10 | reg(rest[1]) << 8;
+      if (["JMP", "JZ", "JNZ", "JC"].includes(name)) {
+        const t = rest[0] in labels ? labels[rest[0]] : num(rest[0]);
+        return CPU_OPS[name] << 12 | (t & 0xFF);
+      }
+      if (name === "OUT") return 7 << 12 | reg(rest[0]) << 8;
+      if (name === "HALT") return 8 << 12;
+      throw new Error(`unknown instruction ${name0}`);
+    } catch (e) {
+      throw new Error(`line ${n}: ${text}: ${e.message}`);
+    }
+  });
+  if (words.length > 256) throw new Error("program is longer than 256 instructions");
+  return { words, lines, labels };
+}
+
+// Decoder16: [AluOp, RegWrite, WSrc, Jump, FlagWrite, OutWrite, Halt]
+function decode16(instr, z, c) {
+  const op = instr >> 12;
+  const jump = op === 3 || (op === 4 && z) || (op === 5 && !z) || (op === 6 && c);
+  return [instr & 15, op <= 2 ? 1 : 0, op === 1 ? 1 : op === 2 ? 2 : 0, jump ? 1 : 0, op === 0 ? 1 : 0, op === 7 ? 1 : 0, op === 8 ? 1 : 0];
+}
+
+const cpuReset = () => ({ pc: 0, regs: [0, 0, 0, 0], out: 0, z: 0, c: 0 });
+
+// One clock tick. Returns the new state plus what happened, for the page's explanation.
+function cpuStep(rom, st) {
+  const instr = st.pc < rom.length ? rom[st.pc] : 0;
+  const op = instr >> 12, rd = (instr >> 10) & 3, rs = (instr >> 8) & 3, imm = instr & 0xFF;
+  const a = st.regs[rd], b = st.regs[rs];
+  const [aluop, regWrite, wsrc, jump, flagWrite, outWrite, halt] = decode16(instr, st.z, st.c);
+  const o = alu(aluop, a, b);
+  const nx = { pc: st.pc, regs: st.regs.slice(), out: st.out, z: st.z, c: st.c };
+  if (regWrite) nx.regs[rd] = [o.r, imm, b][wsrc];
+  if (flagWrite) { nx.z = o.z; nx.c = o.c; }
+  if (outWrite) nx.out = b;
+  if (!halt) nx.pc = jump ? imm : (st.pc + 1) & 0xFF;
+  return { st: nx, ev: { pc: st.pc, instr, op, rd, rs, imm, a, b, r: o.r, signals: { regWrite, wsrc, jump, flagWrite, outWrite, halt } } };
+}
+const cpuHalted = (rom, st) => (st.pc < rom.length ? rom[st.pc] : 0) >> 12 === 8;
+</script>
+
 <script>
 const $ = (id) => document.getElementById(id);
 const spaced = (v) => v.toString(2).padStart(8, "0").replace(/(....)/, "$1 ");
@@ -1337,10 +1521,11 @@ function render() {
   [o.r >> 4, o.r & 15].forEach((nib, k) => digits[k].querySelectorAll(".s").forEach((s) =>
     s.classList.toggle("lit", HEX_SEGMENTS[nib]["abcdefg".indexOf(s.dataset.seg)] === "1")));
   $("display").setAttribute("aria-label", L(`The circuit's display shows ${hex2(o.r)} (hexadecimal)`, `Devrenin ekranı ${hex2(o.r)} gösteriyor (onaltılık)`));
+  showDecimal($("decDisplay"), o.r);
   $("sum").textContent = sumText(state.op, state.a, state.b);
   $("big").textContent = o.r;
-  $("hexNote").textContent = L(`The red display is the one in the circuit. It shows the result in hexadecimal (base 16): ${hex2(o.r)}. In binary it is ${spaced(o.r)}.`,
-    `Kırmızı ekran devredekinin aynısı. Sonucu onaltılık tabanda (16 tabanı) gösterir: ${hex2(o.r)}. İkilik tabanda ${spaced(o.r)}.`);
+  $("hexNote").textContent = L(`Both red displays are the ones in the circuit. The left one shows the result in hexadecimal (base 16): ${hex2(o.r)}. The right one shows it in decimal, through a converter built from gates. In binary it is ${spaced(o.r)}.`,
+    `İki kırmızı ekran da devredekinin aynısı. Soldaki sonucu onaltılık tabanda (16 tabanı) gösterir: ${hex2(o.r)}. Sağdaki, kapılardan yapılmış bir çeviriciyle onluk tabanda gösterir. İkilik tabanda ${spaced(o.r)}.`);
   $("flags").innerHTML = flagLines(state.op, o);
   if (state.op !== lastOp) { lastOp = state.op; showBlock(OP_DIAGRAM[state.op]); }
   renderFsm();
@@ -1363,6 +1548,15 @@ function buildOps() {
 }
 $("groups").addEventListener("click", (e) => { const b = e.target.closest(".op"); if (b) { state.op = Number(b.dataset.op); render(); } });
 $("display").innerHTML = segSvg() + segSvg();
+$("decDisplay").innerHTML = segSvg() + segSvg() + segSvg();
+$("cpuDisplay").innerHTML = segSvg() + segSvg() + segSvg();
+// Three decimal digits as the circuit's BinToBCD8 + HexDecoder7 show them: leading zeros stay dark.
+function showDecimal(el, v) {
+  const d = [Math.floor(v / 100), Math.floor(v / 10) % 10, v % 10], on = [d[0] > 0, d[0] > 0 || d[1] > 0, true];
+  el.querySelectorAll("svg").forEach((svg, k) => svg.querySelectorAll(".s").forEach((s) =>
+    s.classList.toggle("lit", on[k] && HEX_SEGMENTS[d[k]]["abcdefg".indexOf(s.dataset.seg)] === "1")));
+  el.setAttribute("aria-label", String(v));
+}
 const PICKS = () => [
   [L("Small parts", "Küçük parçalar"), [["Select1bit", "Select1bit"], ["HalfAdder", "HalfAdder"], ["FullAdder", "FullAdder"], ["Register", L("Register bit", "Register biti")]]],
   [L("8-bit blocks", "8 bitlik bloklar"), [["Adder8bit", "Adder8bit"], ["Subtractor8bit", "Subtractor8bit"], ["INC8bit", "INC8bit"], ["DEC8bit", "DEC8bit"],
@@ -1469,6 +1663,98 @@ for (const [id, mode] of [["tSimple", "simple"], ["tDetail", "detail"]]) $(id).a
   renderTrace();
 });
 
+// Mini CPU section: program picker, listing, step / run, registers and an explanation per tick.
+const cpu = { name: "fibonacci", src: PROGRAMS.fibonacci, prog: assemble(PROGRAMS.fibonacci), st: cpuReset(), prev: null, ev: null, ticks: 0, timer: null };
+const PROG_NAMES = () => [["fibonacci", L("Fibonacci", "Fibonacci")], ["countdown", L("Countdown", "Geri sayım")],
+  ["multiply", L("7 × 6 with a loop", "Döngüyle 7 × 6")], ["own", L("Your own", "Seninki")]];
+function cpuStop() { clearInterval(cpu.timer); cpu.timer = null; }
+function cpuRestart() { cpuStop(); cpu.st = cpuReset(); cpu.prev = null; cpu.ev = null; cpu.ticks = 0; }
+function cpuTick() {
+  if (cpuHalted(cpu.prog.words, cpu.st)) { cpuStop(); return; }
+  const { st, ev } = cpuStep(cpu.prog.words, cpu.st);
+  cpu.prev = cpu.st; cpu.st = st; cpu.ev = ev; cpu.ticks++;
+  if (cpuHalted(cpu.prog.words, cpu.st)) cpuStop();
+  renderCpu();
+}
+function cpuExplain() {
+  const ev = cpu.ev, st = cpu.st;
+  if (!ev) return L("Press Step to run the first instruction. The highlighted line is the one that runs next; the program counter (PC) holds its address.",
+    "İlk komutu çalıştırmak için Adım'a bas. İşaretli satır sıradaki komut; program sayacı (PC) onun adresini tutar.");
+  const line = cpu.prog.lines[ev.pc], text = line ? line.text : L("ADD R0, R0 (empty memory)", "ADD R0, R0 (boş hafıza)");
+  const R = (k) => `R${k}`, target = (a) => { const l = cpu.prog.lines[a]?.label; return l ? `${a} (${l})` : `${a}`; };
+  let what;
+  if (ev.op === 0) {
+    const name = CPU_ALU[ev.instr & 15];
+    what = L(`The ALU does ${name}: ${R(ev.rd)} = ${sumText(ev.instr & 15, ev.a, ev.b).replace(/ =$/, "")} = ${ev.r}. The flags are stored: Z = ${st.z}${st.z ? " (the result is 0)" : ""}, C = ${st.c}${st.c ? " (it went past 255)" : ""}.`,
+      `ALU ${name} yapar: ${R(ev.rd)} = ${sumText(ev.instr & 15, ev.a, ev.b).replace(/ =$/, "")} = ${ev.r}. Bayraklar kaydedilir: Z = ${st.z}${st.z ? " (sonuç 0)" : ""}, C = ${st.c}${st.c ? " (255'i geçti)" : ""}.`);
+  } else if (ev.op === 1) what = L(`Puts the number ${ev.imm} into ${R(ev.rd)}. The number is part of the instruction itself.`, `${ev.imm} sayısını ${R(ev.rd)}'ye koyar. Sayı, komutun kendi içinde yazılı.`);
+  else if (ev.op === 2) what = L(`Copies ${R(ev.rs)} into ${R(ev.rd)}: both are now ${ev.b}.`, `${R(ev.rs)}'yi ${R(ev.rd)}'ye kopyalar: ikisi de artık ${ev.b}.`);
+  else if (ev.op === 3) what = L(`Jumps to line ${target(ev.imm)}: the PC gets that address instead of PC + 1. This is how loops repeat.`, `${target(ev.imm)} satırına atlar: PC, PC + 1 yerine o adresi alır. Döngüler böyle tekrar eder.`);
+  else if (ev.op >= 4 && ev.op <= 6) {
+    const f = ev.op === 6 ? "C" : "Z", v = ev.op === 6 ? cpu.prev.c : cpu.prev.z, want = ev.op === 4 || ev.op === 6 ? 1 : 0;
+    what = ev.signals.jump
+      ? L(`${f} is ${v}, so it jumps to line ${target(ev.imm)}.`, `${f} = ${v}, o yüzden ${target(ev.imm)} satırına atlar.`)
+      : L(`${f} is ${v}, not ${want}, so it does not jump and goes on to the next line.`, `${f} = ${v}, ${want} değil, o yüzden atlamaz ve sonraki satıra geçer.`);
+  } else if (ev.op === 7) what = L(`Shows ${R(ev.rs)} = ${ev.b} on the display.`, `${R(ev.rs)} = ${ev.b} değerini ekranda gösterir.`);
+  else if (ev.op === 8) what = L("Halt.", "Dur.");
+  else what = L("This opcode is unused, so nothing happens.", "Bu opcode kullanılmıyor, bir şey olmaz.");
+  const end = cpuHalted(cpu.prog.words, st) ? L(" The next line is HALT: the program is finished and the PC stays where it is.", " Sıradaki satır HALT: program bitti, PC olduğu yerde kalır.") : "";
+  return `${L("Tick", "Tık")} ${cpu.ticks} · ${text}: ${what}${end}`;
+}
+function renderCpu() {
+  const { prog, st, ev, prev } = cpu, halted = cpuHalted(prog.words, st);
+  $("cpuProgs").innerHTML = PROG_NAMES().map(([k, t]) => `<button class="pick" data-p="${k}" aria-pressed="${k === cpu.name}">${t}</button>`).join("");
+  $("cpuList").innerHTML = `<tr><td class="ad">PC</td><td class="lb"></td><td>${L("instruction", "komut")}</td><td class="hx">hex</td></tr>` +
+    prog.lines.map((l, a) => `<tr class="${a === st.pc ? "next" : ev && a === ev.pc ? "done" : ""}"><td class="ad">${a}</td><td class="lb">${l.label ? esc(l.label) + ":" : ""}</td><td>${esc(l.text)}</td><td class="hx">${prog.words[a].toString(16).toUpperCase().padStart(4, "0")}</td></tr>`).join("");
+  const row = $("cpuList").querySelector("tr.next");
+  if (row && cpu.timer) row.scrollIntoView({ block: "nearest" });
+  $("cpuRegs").innerHTML = [["PC", st.pc, prev && prev.pc + 1 !== st.pc]].concat(st.regs.map((v, k) => [`R${k}`, v, prev && prev.regs[k] !== v]))
+    .map(([n, v, chg]) => `<div class="regbox${chg ? " chg" : ""}"><span>${n}</span><b>${v}</b><i>${spaced(v)}</i></div>`).join("");
+  $("cpuFlags").innerHTML = `<span class="chip${st.z ? " on" : ""}">Z = ${st.z}</span><span class="chip${st.c ? " on" : ""}">C = ${st.c}</span><span class="chip halt${halted ? " on" : ""}">HALT</span>`;
+  showDecimal($("cpuDisplay"), st.out);
+  const s = ev ? ev.signals : null;
+  $("cpuSig").innerHTML = [["RegWrite", s && s.regWrite], ["WSrc = " + (s ? ["ALU", "imm", "rs"][s.wsrc] : "ALU"), s && s.regWrite],
+    ["FlagWrite", s && s.flagWrite], ["OutWrite", s && s.outWrite], ["Jump", s && s.jump], ["Halt", s && s.halt]]
+    .map(([n, on]) => `<span class="chip${on ? " on" : ""}">${n}</span>`).join("");
+  $("cpuText").textContent = cpuExplain();
+  $("cpuTicks").textContent = `${L("ticks", "tık")}: ${cpu.ticks}`;
+  $("cpuStep").textContent = L("Step", "Adım");
+  $("cpuStep").disabled = halted;
+  $("cpuRun").textContent = cpu.timer ? L("❚❚ Pause", "❚❚ Durdur") : L("▶ Run", "▶ Çalıştır");
+  $("cpuRun").disabled = halted;
+  $("cpuReset").textContent = L("Reset", "Sıfırla");
+  $("cpuLoad").textContent = L("Load this program", "Bu programı yükle");
+  if (document.activeElement !== $("cpuSrc")) $("cpuSrc").value = cpu.src;
+}
+function cpuUse(name, src) {
+  try {
+    cpu.prog = assemble(src);
+    if (!cpu.prog.words.length) throw new Error(L("the program is empty", "program boş"));
+  } catch (e) {
+    $("cpuErr").textContent = e.message;
+    cpu.prog = assemble(cpu.src);
+    return;
+  }
+  $("cpuErr").textContent = "";
+  cpu.name = name; cpu.src = src;
+  cpuRestart();
+  renderCpu();
+}
+$("cpuProgs").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-p]");
+  if (!b) return;
+  if (b.dataset.p === "own") { $("cpuOwn").open = true; $("cpuSrc").focus(); cpu.name = "own"; renderCpu(); return; }
+  cpuUse(b.dataset.p, PROGRAMS[b.dataset.p]);
+});
+$("cpuStep").addEventListener("click", () => { cpuStop(); cpuTick(); });
+$("cpuRun").addEventListener("click", () => {
+  if (cpu.timer) { cpuStop(); renderCpu(); return; }
+  cpu.timer = setInterval(cpuTick, 450);
+  renderCpu();
+});
+$("cpuReset").addEventListener("click", () => { cpuRestart(); renderCpu(); });
+$("cpuLoad").addEventListener("click", () => cpuUse("own", $("cpuSrc").value));
+
 function setLang(lang) {
   LANG = lang;
   try { localStorage.setItem("lang", lang); } catch (e) {}
@@ -1483,6 +1769,7 @@ function setLang(lang) {
   buildPicker();
   if (trail.length) showBlock(trail[trail.length - 1], "keep");
   render();
+  renderCpu();
 }
 $("langBtn").addEventListener("click", () => setLang(LANG === "tr" ? "en" : "tr"));
 setLang(LANG);

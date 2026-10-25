@@ -23,5 +23,20 @@ lines.slice(1).forEach((l,n)=>{const [A,B,Op,R,Z,C,S,V]=l.trim().split(/\s+/);
   const steps=walk(parseInt(Op,2),parseInt(A,2),parseInt(B,2)),k=steps.check;
   const ok=k.r===parseInt(R,2)&&(k.c===undefined||k.c==C)&&(k.v===undefined||k.v==V)&&!steps.some((st)=>/undefined|NaN/.test(st.svg+st.text));
   if(ok)pass++;else{fail++; if(fail<5)console.log(walk.name+":",l,k)}})});
+// The Mini CPU section: its programs and assembler must match programs/*.asm and *.hex,
+// and running the ROM program must match the cpu circuit's vectors tick by tick.
+const C=new Function(src+part("cpu")+";return {PROGRAMS,assemble,cpuStep,cpuReset,cpuHalted};")();
+const dir=require("path").join(__dirname,"..","programs");
+for(const f of fs.readdirSync(dir).filter((f)=>f.endsWith(".asm"))){
+ const name=f.slice(0,-4),asmText=fs.readFileSync(require("path").join(dir,f),"utf8");
+ const hex=fs.readFileSync(require("path").join(dir,name+".hex"),"utf8").split("\n").slice(1).join(" ").trim().split(/\s+/).map((w)=>parseInt(w,16));
+ const ok=C.PROGRAMS[name]===asmText&&JSON.stringify(C.assemble(asmText).words)===JSON.stringify(hex);
+ if(ok)pass++;else{fail++;console.log("program:",name)}}
+const rom=C.assemble(C.PROGRAMS.fibonacci).words;let st=C.cpuReset();
+const cpuRows=fs.readFileSync(require("path").join(__dirname,"vectors","cpu.txt"),"utf8").split("\n").filter(l=>l.trim()&&!l.startsWith("#")).slice(1);
+for(const l of cpuRows){const v=l.trim().split(/\s+/),n=(i)=>parseInt(v[i],2);
+ st=v[1]==="1"?C.cpuReset():C.cpuStep(rom,st).st;
+ const got=[st.pc,...st.regs,st.out,st.z,st.c,C.cpuHalted(rom,st)?1:0],want=[2,3,4,5,6,7,8,9,10].map(n);
+ if(JSON.stringify(got)===JSON.stringify(want))pass++;else{fail++;if(fail<5)console.log("cpu:",l,got)}}
 console.log(`Passed: ${pass}, Failed: ${fail}`);
 process.exit(fail ? 1 : 0);

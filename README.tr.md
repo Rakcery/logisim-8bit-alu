@@ -45,10 +45,12 @@ register kullanılmadı.
 
 Herkesin bilgisayarında Logisim yok, bu yüzden [`docs/index.html`](docs/index.html)
 projeyi anlatan tek sayfalık bir rehber ([canlı hali](https://rakcery.github.io/logisim-8bit-alu/?lang=tr)),
-Türkçe ve İngilizce. İki sayı gir, bir işlem seç; sonucu, onaltılık ekranı ve her
-bayrak ışığının ne anlama geldiğini gör. Altında her bloğun küçük bir şeması var:
-bir kutuya tıklayıp içini açabilirsin, `main`'den tek bir register bitine kadar.
-Sayfanın hesapları, devreyle aynı test vektörleriyle kontrol ediliyor.
+Türkçe ve İngilizce. İki sayı gir, bir işlem seç; sonucu onaltılık ve onluk ekranda,
+her bayrak ışığının ne anlama geldiğini de yanında gör. Adım adım oynatıcı sayılarını
+bloklar arasında takip eder; Mini CPU bölümü örnek programları (ya da seninkini) tık tık
+çalıştırır ve her register'ı gösterir. Altında her bloğun küçük bir şeması var: bir
+kutuya tıklayıp içini açabilirsin, `main`'den tek bir register bitine kadar. Sayfanın
+hesapları ve CPU'su, devreyle aynı test vektörleriyle kontrol ediliyor.
 
 ## Nasıl yapıldı
 
